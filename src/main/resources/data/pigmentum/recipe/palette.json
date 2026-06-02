@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "WBR",
+    "YSG",
+    "P N"
+  ],
+  "key": {
+    "W": { "item": "minecraft:white_dye" },
+    "B": { "item": "minecraft:black_dye" },
+    "R": { "item": "minecraft:red_dye" },
+    "Y": { "item": "minecraft:yellow_dye" },
+    "G": { "item": "minecraft:blue_dye" },
+    "P": { "item": "minecraft:brown_dye" },
+    "N": { "item": "minecraft:green_dye" },
+    "S": { "tag": "minecraft:signs" }
+  },
+  "result": {
+    "id": "pigmentum:palette",
+    "count": 1
+  }
+}
