@@ -1,0 +1,13 @@
+{
+  "itemGroup.pigmentum": "Example Mod Tab",
+  "block.pigmentum.example_block": "Example Block",
+  "item.pigmentum.example_item": "Example Item",
+
+  "pigmentum.configuration.title": "Pigmentum Configs",
+  "pigmentum.configuration.section.pigmentum.common.toml": "Pigmentum Configs",
+  "pigmentum.configuration.section.pigmentum.common.toml.title": "Pigmentum Configs",
+  "pigmentum.configuration.items": "Item List",
+  "pigmentum.configuration.logDirtBlock": "Log Dirt Block",
+  "pigmentum.configuration.magicNumberIntroduction": "Magic Number Text",
+  "pigmentum.configuration.magicNumber": "Magic Number"
+}
