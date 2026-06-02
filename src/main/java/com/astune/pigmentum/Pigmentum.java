@@ -75,6 +75,9 @@ public class Pigmentum {
     /** Palette - right-click to pick the color under the crosshair. */
     public static final DeferredItem<Item> PALETTE = ITEMS.register("palette", PaletteItem::new);
 
+    /** Custom paintbrush with circular pattern and offhand color source. */
+    public static final DeferredItem<Item> CUSTOM_PAINTBRUSH = ITEMS.register("custom_paintbrush", CustomPaintbrush::new);
+
     // Creates a new food item with the id "pigmentum:example_id", nutrition 1 and saturation 2
     public static final DeferredItem<Item> EXAMPLE_ITEM = ITEMS.registerSimpleItem("example_item", new Item.Properties().food(new FoodProperties.Builder()
             .alwaysEdible().nutrition(1).saturationModifier(2f).build()));
@@ -88,6 +91,7 @@ public class Pigmentum {
             .icon(() -> PALETTE.get().getDefaultInstance())
             .displayItems((parameters, output) -> {
                 output.accept(PALETTE.get()); // Add the palette to the tab
+                output.accept(CUSTOM_PAINTBRUSH.get()); // Add the custom paintbrush to the tab
                 output.accept(EXAMPLE_ITEM.get()); // Add the example item to the tab. For your own tabs, this method is preferred over the event
             }).build());
 

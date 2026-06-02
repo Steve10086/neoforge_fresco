@@ -94,7 +94,7 @@ public class PaletteItem extends Item {
 
         // 4. 格式转换
         int rgba = buffer.get(0);
-        int a = (rgba >> 24) & 0xFF;
+        int a = 255;
         int r = (rgba) & 0xFF;
         int g = (rgba >> 8) & 0xFF;
         int b = (rgba >> 16) & 0xFF;
