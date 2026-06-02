@@ -126,7 +126,7 @@ configurations {
 
 dependencies {
     // Painter - 画布 API 底层模组
-    implementation "maven.modrinth:pigmentum:0.5.+"
+    implementation "maven.modrinth:9Q6E7yfO:nSFM3Pk4"
 
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime

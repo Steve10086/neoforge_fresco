@@ -1,19 +1,21 @@
 package com.astune.pigmentum;
 
-import com.astune.painter.Painter;
-import com.astune.painter.client.CanvasTextureManager;
-import org.slf4j.Logger;
-
 import com.mojang.logging.LogUtils;
-
+import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.network.codec.ByteBufCodecs;
+import com.mojang.serialization.Codec;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -21,19 +23,20 @@ import net.minecraft.world.level.material.MapColor;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
-import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
+import org.slf4j.Logger;
 
-// The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(Pigmentum.MODID)
 public class Pigmentum {
     // Define mod id in a common place for everything to reference
@@ -46,22 +49,45 @@ public class Pigmentum {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MODID);
     // Create a Deferred Register to hold CreativeModeTabs which will all be registered under the "pigmentum" namespace
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
+    // Create a Deferred Register to hold DataComponentTypes
+    public static final DeferredRegister<DataComponentType<?>> DATA_COMPONENTS = DeferredRegister.create(Registries.DATA_COMPONENT_TYPE, MODID);
+
+    // ---- Data Components ----
+
+    /** Stores the ARGB color picked by the palette. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> PALETTE_COLOR = DATA_COMPONENTS.register(
+            "palette_color",
+            () -> DataComponentType.<Integer>builder()
+                    .persistent(Codec.INT)
+                    .networkSynchronized(ByteBufCodecs.VAR_INT)
+                    .build()
+    );
+
+    // ---- Blocks ----
 
     // Creates a new Block with the id "pigmentum:example_block", combining the namespace and path
     public static final DeferredBlock<Block> EXAMPLE_BLOCK = BLOCKS.registerSimpleBlock("example_block", BlockBehaviour.Properties.of().mapColor(MapColor.STONE));
     // Creates a new BlockItem with the id "pigmentum:example_block", combining the namespace and path
     public static final DeferredItem<BlockItem> EXAMPLE_BLOCK_ITEM = ITEMS.registerSimpleBlockItem("example_block", EXAMPLE_BLOCK);
 
+    // ---- Items ----
+
+    /** Palette - right-click to pick the color under the crosshair. */
+    public static final DeferredItem<Item> PALETTE = ITEMS.register("palette", PaletteItem::new);
+
     // Creates a new food item with the id "pigmentum:example_id", nutrition 1 and saturation 2
     public static final DeferredItem<Item> EXAMPLE_ITEM = ITEMS.registerSimpleItem("example_item", new Item.Properties().food(new FoodProperties.Builder()
             .alwaysEdible().nutrition(1).saturationModifier(2f).build()));
+
+    // ---- Creative Tabs ----
 
     // Creates a creative tab with the id "pigmentum:example_tab" for the example item, that is placed after the combat tab
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> EXAMPLE_TAB = CREATIVE_MODE_TABS.register("example_tab", () -> CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.pigmentum")) //The language key for the title of your CreativeModeTab
             .withTabsBefore(CreativeModeTabs.COMBAT)
-            .icon(() -> EXAMPLE_ITEM.get().getDefaultInstance())
+            .icon(() -> PALETTE.get().getDefaultInstance())
             .displayItems((parameters, output) -> {
+                output.accept(PALETTE.get()); // Add the palette to the tab
                 output.accept(EXAMPLE_ITEM.get()); // Add the example item to the tab. For your own tabs, this method is preferred over the event
             }).build());
 
@@ -77,6 +103,11 @@ public class Pigmentum {
         ITEMS.register(modEventBus);
         // Register the Deferred Register to the mod event bus so tabs get registered
         CREATIVE_MODE_TABS.register(modEventBus);
+        // Register the Deferred Register to the mod event bus so data components get registered
+        DATA_COMPONENTS.register(modEventBus);
+
+        // Register networking payloads
+        modEventBus.addListener(this::registerNetworking);
 
         // Register ourselves for server and other game events we are interested in.
         // Note that this is necessary if and only if we want *this* class (Pigmentum) to respond directly to events.
@@ -88,6 +119,28 @@ public class Pigmentum {
 
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+    }
+
+    private void registerNetworking(final RegisterPayloadHandlersEvent event) {
+        var registrar = event.registrar(MODID);
+        registrar.playToServer(
+                SetPaletteColorPayload.TYPE,
+                SetPaletteColorPayload.STREAM_CODEC,
+                (payload, context) -> {
+                    var player = context.player();
+                    ItemStack stack = player.getOffhandItem();
+                    if (stack.getItem() instanceof PaletteItem) {
+                        int color = payload.color();
+                        int colorRgb = color & 0x00FFFFFF;
+                        PaletteItem.setCurrentColor(stack, color);
+                        String hex = String.format("#%06X", colorRgb);
+                        Component name = Component.translatable(stack.getItem().getDescriptionId())
+                                .append(Component.literal(" (" + hex + ")"))
+                                .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(colorRgb)));
+                        stack.set(DataComponents.CUSTOM_NAME, name);
+                    }
+                }
+        );
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {

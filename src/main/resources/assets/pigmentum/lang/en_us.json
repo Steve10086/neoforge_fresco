@@ -1,7 +1,8 @@
 {
-  "itemGroup.pigmentum": "Example Mod Tab",
+  "itemGroup.pigmentum": "Pigmentum",
   "block.pigmentum.example_block": "Example Block",
   "item.pigmentum.example_item": "Example Item",
+  "item.pigmentum.palette": "Palette",
 
   "pigmentum.configuration.title": "Pigmentum Configs",
   "pigmentum.configuration.section.pigmentum.common.toml": "Pigmentum Configs",
