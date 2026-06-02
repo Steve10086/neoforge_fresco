@@ -1,5 +1,7 @@
 package com.astune.pigmentum;
 
+import com.astune.painter.Painter;
+import com.astune.painter.client.CanvasTextureManager;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
