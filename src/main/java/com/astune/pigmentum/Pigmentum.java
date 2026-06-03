@@ -132,6 +132,8 @@ public class Pigmentum {
 
     private void registerNetworking(final RegisterPayloadHandlersEvent event) {
         var registrar = event.registrar(MODID);
+
+        // Palette color sync
         registrar.playToServer(
                 SetPaletteColorPayload.TYPE,
                 SetPaletteColorPayload.STREAM_CODEC,
@@ -147,6 +149,24 @@ public class Pigmentum {
                                 .append(Component.literal(" (" + hex + ")"))
                                 .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(colorRgb)));
                         stack.set(DataComponents.CUSTOM_NAME, name);
+                    }
+                }
+        );
+
+        // Generic item stack sync (used by PaintbrushScreen and other config screens)
+        registrar.playToServer(
+                SyncItemStackPayload.TYPE,
+                SyncItemStackPayload.STREAM_CODEC,
+                (payload, context) -> {
+                    var player = context.player();
+                    int slot = payload.slot();
+                    ItemStack clientStack = payload.stack();
+                    // 仅当槽位物品类型一致时才更新（安全检查）
+                    if (slot >= 0 && slot < player.getInventory().getContainerSize()) {
+                        ItemStack serverStack = player.getInventory().getItem(slot);
+                        if (ItemStack.isSameItem(serverStack, clientStack)) {
+                            serverStack.applyComponents(clientStack.getComponentsPatch());
+                        }
                     }
                 }
         );

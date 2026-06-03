@@ -2,37 +2,56 @@ package com.astune.pigmentum;
 
 import com.astune.painter.api.BlendMode;
 import com.astune.painter.registry.ModDataComponents;
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.network.PacketDistributor;
 
-/**
- * 画笔参数调整屏幕，直接读写 ItemStack 上的 data components。
- */
 public class PaintbrushScreen extends Screen {
 
-    private final ItemStack brushStack;
+    private static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
+            ResourceLocation.fromNamespaceAndPath(Pigmentum.MODID, "widget/button"),
+            ResourceLocation.fromNamespaceAndPath(Pigmentum.MODID, "widget/button_disabled"),
+            ResourceLocation.fromNamespaceAndPath(Pigmentum.MODID, "widget/button_highlighted")
+    );
+    private static final ResourceLocation TEX_SLIDER =
+            ResourceLocation.fromNamespaceAndPath(Pigmentum.MODID, "widget/slider");
+    private static final ResourceLocation TEX_SLIDER_HIGHLIGHTED =
+            ResourceLocation.fromNamespaceAndPath(Pigmentum.MODID, "widget/slider_highlighted");
+    private static final ResourceLocation TEX_SLIDER_HANDLE =
+            ResourceLocation.fromNamespaceAndPath(Pigmentum.MODID, "widget/slider_handle");
+    private static final ResourceLocation TEX_SLIDER_HANDLE_HIGHLIGHTED =
+            ResourceLocation.fromNamespaceAndPath(Pigmentum.MODID, "widget/slider_handle_highlighted");
+    private static final ResourceLocation TEX_PANEL_BG =
+            ResourceLocation.fromNamespaceAndPath(Pigmentum.MODID, "widget/panel_background");
 
-    private static final int SLIDER_WIDTH = 150;
-    private static final int SLIDER_HEIGHT = 20;
-    private static final int LEFT_MARGIN = 30;
+    private final ItemStack brushStack;
+    private final int slot;
+
+    private static final int BUTTON_W = 150;
+    private static final int BUTTON_H = 20;
+    private static final int HANDLE_W = 8;
+
+    private int panelX, panelY, panelW, panelH;
 
     private double brushSize;
     private float opacity;
     private BlendMode blendMode;
 
-    // 按钮/滑块用到的去 bounce
-    private int sliderCount = 0;
-
-    public PaintbrushScreen(ItemStack brushStack) {
+    public PaintbrushScreen(ItemStack brushStack, int slot) {
         super(Component.translatable("pigmentum.paintbrush_screen.title"));
         this.brushStack = brushStack;
+        this.slot = slot;
         this.brushSize = brushStack.getOrDefault(ModDataComponents.BRUSH_SIZE.get(), 0.06);
         this.opacity = brushStack.getOrDefault(ModDataComponents.OPACITY.get(), 1.0f);
         String modeStr = brushStack.getOrDefault(ModDataComponents.BLEND_MODE.get(), BlendMode.OVERWRITE.name());
@@ -49,78 +68,69 @@ public class PaintbrushScreen extends Screen {
 
     @Override
     protected void init() {
-        int centerX = this.width / 2;
-        int y = 40;
+        int contentW = BUTTON_W + 20;
+        int contentH = 190;
+        this.panelX = (this.width - contentW) / 2;
+        this.panelY = (this.height - contentH) / 2;
+        this.panelW = contentW;
+        this.panelH = contentH;
 
-        // ── 画笔大小滑块 ──
-        addRenderableWidget(new BrushSlider(
-                centerX - SLIDER_WIDTH / 2, y, SLIDER_WIDTH, SLIDER_HEIGHT,
+        int cx = this.width / 2;
+        int y = panelY + 35;
+
+        addRenderableWidget(new TexturedSlider(cx - BUTTON_W / 2, y, BUTTON_W, BUTTON_H,
                 Component.translatable("pigmentum.paintbrush_screen.size"),
-                (brushSize - 0.01) / (0.25 - 0.01),  // normalized 0..1
-                val -> {
-                    brushSize = 0.01 + val * (1.0 - 0.01);
-                    saveParameters();
-                }
-        ));
+                (brushSize - 0.01) / (0.25 - 0.01),
+                val -> { brushSize = 0.01 + val * (0.25 - 0.01); saveParameters(); }));
         y += 30;
 
-        // ── 不透明度滑块 ──
-        addRenderableWidget(new BrushSlider(
-                centerX - SLIDER_WIDTH / 2, y, SLIDER_WIDTH, SLIDER_HEIGHT,
+        addRenderableWidget(new TexturedSlider(cx - BUTTON_W / 2, y, BUTTON_W, BUTTON_H,
                 Component.translatable("pigmentum.paintbrush_screen.opacity"),
-                opacity,  // already 0..1
-                val -> {
-                    opacity = (float) (double) val;
-                    saveParameters();
-                }
-        ));
+                opacity,
+                val -> { opacity = (float)(double)val; saveParameters(); }));
         y += 30;
 
-        // ── 混合模式切换 ──
         var modes = BlendMode.values();
-        int modeIdx = blendMode.ordinal();
-        addRenderableWidget(Button.builder(
+        addRenderableWidget(new TexturedButton(cx - BUTTON_W / 2, y, BUTTON_W, BUTTON_H,
                 Component.translatable("pigmentum.paintbrush_screen.blend",
-                        Component.translatable(blendModeKey(modes[modeIdx]))),
+                        Component.translatable(blendModeKey(blendMode))),
                 btn -> {
                     int next = (blendMode.ordinal() + 1) % modes.length;
                     blendMode = modes[next];
                     btn.setMessage(Component.translatable("pigmentum.paintbrush_screen.blend",
-                            Component.translatable(blendModeKey(modes[modeIdx]))));
+                            Component.translatable(blendModeKey(blendMode))));
                     saveParameters();
-                }
-        ).pos(centerX - SLIDER_WIDTH / 2, y).size(SLIDER_WIDTH, SLIDER_HEIGHT).build());
+                }));
         y += 40;
 
-        // ── 关闭按钮 ──
-        addRenderableWidget(Button.builder(
-                CommonComponents.GUI_DONE,
-                btn -> this.onClose()
-        ).pos(centerX - 50, y).size(100, 20).build());
+        addRenderableWidget(new TexturedButton(cx - 50, panelY + panelH - 28, 100, BUTTON_H,
+                CommonComponents.GUI_DONE, btn -> this.onClose()));
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
-        guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 15, 0xFFFFFF);
+    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        renderBackground(g, mouseX, mouseY, partialTick);
 
-        // 当前值提示
+        RenderSystem.enableBlend();
+        g.blitSprite(TEX_PANEL_BG, panelX, panelY, panelW, panelH);
+        g.drawCenteredString(this.font, this.title, this.width / 2, panelY + 6, 0xFFFFFF);
+
+        for (var w : this.renderables) w.render(g, mouseX, mouseY, partialTick);
+
         int color = CustomPaintbrush.resolveOffhandColor(
                 this.minecraft != null ? this.minecraft.player : null);
         String hex = String.format("#%06X", color & 0x00FFFFFF);
-        guiGraphics.drawCenteredString(this.font,
+        g.drawCenteredString(this.font,
                 Component.translatable("pigmentum.paintbrush_screen.current_color", hex),
-                this.width / 2, this.height - 30, color & 0x00FFFFFF);
+                this.width / 2, panelY + panelH - 10, color & 0x00FFFFFF);
     }
 
-    @Override
-    public boolean isPauseScreen() {
-        return false;
-    }
+    @Override public boolean isPauseScreen() { return false; }
 
     @Override
     public void onClose() {
         saveParameters();
+        PacketDistributor.sendToServer(new SyncItemStackPayload(slot, brushStack.copy()));
         super.onClose();
     }
 
@@ -130,56 +140,62 @@ public class PaintbrushScreen extends Screen {
         brushStack.set(ModDataComponents.BLEND_MODE.get(), blendMode.name());
     }
 
-    // ── 滑动条 ───────────────────────────────────────────────
+    // ── TexturedButton ────────────────────────────────────────
 
-    private class BrushSlider extends AbstractWidget {
-        private double value; // 0..1
-        private final Component label;
+    private static class TexturedButton extends AbstractButton {
+        private final OnPress onPress;
+        TexturedButton(int x, int y, int w, int h, Component msg, OnPress onPress) {
+            super(x, y, w, h, msg); this.onPress = onPress;
+        }
+        @Override
+        protected void renderWidget(GuiGraphics g, int mx, int my, float pt) {
+            g.blitSprite(BUTTON_SPRITES.get(this.active, this.isHovered()),
+                    this.getX(), this.getY(), this.getWidth(), this.getHeight());
+            int tc = this.active ? 0xFFFFFF : 0xA0A0A0;
+            g.drawCenteredString(Minecraft.getInstance().font, this.getMessage(),
+                    this.getX() + this.getWidth() / 2,
+                    this.getY() + (this.getHeight() - 8) / 2,
+                    tc | Mth.ceil(this.alpha * 255.0F) << 24);
+        }
+
+        @Override
+        public void onPress() { this.onPress.onPress(this); }
+
+        @Override
+        protected void updateWidgetNarration(NarrationElementOutput o) { this.defaultButtonNarrationText(o); }
+    }
+
+    @FunctionalInterface
+    private interface OnPress { void onPress(TexturedButton button); }
+
+    // ── TexturedSlider ────────────────────────────────────────
+
+    private static class TexturedSlider extends AbstractWidget {
+        private double value;
         private final java.util.function.Consumer<Double> onChanged;
-
-        BrushSlider(int x, int y, int w, int h, Component label, double initial, java.util.function.Consumer<Double> cb) {
-            super(x, y, w, h, label);
-            this.label = label;
-            this.value = initial;
-            this.onChanged = cb;
-            setTooltip(Tooltip.create(Component.literal(String.format("%.0f%%", initial * 100))));
+        TexturedSlider(int x, int y, int w, int h, Component label, double init,
+                       java.util.function.Consumer<Double> cb) {
+            super(x, y, w, h, label); this.value = init; this.onChanged = cb;
         }
-
         @Override
-        protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partial) {
-            // 背景条
-            int barY = this.getY() + this.height / 2 - 1;
-            guiGraphics.fill(this.getX(), barY, this.getX() + this.width, barY + 2, 0xFF555555);
-            // 填充条
-            int fillEnd = this.getX() + (int) (this.width * value);
-            guiGraphics.fill(this.getX(), barY, fillEnd, barY + 2, 0xFF00AA00);
-            // 把手
-            int handleX = fillEnd - 2;
-            guiGraphics.fill(handleX, this.getY(), handleX + 4, this.getY() + this.height, 0xFFFFFFFF);
+        protected void renderWidget(GuiGraphics g, int mx, int my, float pt) {
+            Component display = Component.literal(
+                    this.getMessage().getString() + ": " + String.format("%.0f%%", value * 100));
+            int labelW = Minecraft.getInstance().font.width(display);
+            g.drawString(Minecraft.getInstance().font, display,
+                    this.getX() + (this.getWidth() - labelW) / 2, this.getY() - 12, 0xFFCCCCCC);
 
-            // 标签
-            Component display = Component.literal(label.getString() + ": " + String.format("%.0f%%", value * 100));
-            guiGraphics.drawString(PaintbrushScreen.this.font, display, this.getX(), this.getY() - 12, 0xCCCCCC);
+            g.blitSprite(this.isFocused() ? TEX_SLIDER_HIGHLIGHTED : TEX_SLIDER,
+                    this.getX(), this.getY(), this.getWidth(), this.getHeight());
+            g.blitSprite(this.isHovered ? TEX_SLIDER_HANDLE_HIGHLIGHTED : TEX_SLIDER_HANDLE,
+                    this.getX() + (int)(this.value * (this.width - HANDLE_W)),
+                    this.getY(), HANDLE_W, this.getHeight());
         }
-
-        @Override
-        public void onClick(double mouseX, double mouseY) {
-            updateValue(mouseX);
-        }
-
-        @Override
-        protected void onDrag(double mouseX, double mouseY, double dragX, double dragY) {
-            updateValue(mouseX);
-        }
-
-        @Override
-        protected void updateWidgetNarration(NarrationElementOutput output) {
-            this.defaultButtonNarrationText(output);
-        }
-
-        private void updateValue(double mouseX) {
-            value = Math.clamp((mouseX - this.getX()) / this.width, 0.0, 1.0);
-            setTooltip(Tooltip.create(Component.literal(String.format("%.0f%%", value * 100))));
+        @Override public void onClick(double mx, double my) { updateValue(mx); }
+        @Override protected void onDrag(double mx, double my, double dx, double dy) { updateValue(mx); }
+        @Override protected void updateWidgetNarration(NarrationElementOutput o) { this.defaultButtonNarrationText(o); }
+        private void updateValue(double mx) {
+            value = Mth.clamp((mx - (this.getX() + HANDLE_W / 2.0)) / (this.width - HANDLE_W), 0.0, 1.0);
             onChanged.accept(value);
         }
     }

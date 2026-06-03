@@ -111,14 +111,17 @@ public class CustomPaintbrush extends Item implements IPaintProvider {
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         if (level.isClientSide() && player.isShiftKeyDown()) {
-            openConfigScreen(stack);
+            int slot = hand == InteractionHand.MAIN_HAND
+                    ? player.getInventory().selected
+                    : 40; // offhand slot
+            openConfigScreen(stack, slot);
         }
         return InteractionResultHolder.success(stack);
     }
 
     @OnlyIn(Dist.CLIENT)
-    private void openConfigScreen(ItemStack stack) {
-        Minecraft.getInstance().setScreen(new PaintbrushScreen(stack));
+    private void openConfigScreen(ItemStack stack, int slot) {
+        Minecraft.getInstance().setScreen(new PaintbrushScreen(stack, slot));
     }
 
     // ── Tooltip ──────────────────────────────────────────────────

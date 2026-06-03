@@ -9,12 +9,12 @@
   "key": {
     "S": { "item": "minecraft:stick" },
     "X": { "item": "minecraft:string" },
-    "I": { "item": "minecraft:ink_sac" },
+    "I": { "item": "minecraft:glow_ink_sac" },
     "B": { "tag": "minecraft:buttons" },
     "F": { "item": "minecraft:feather" }
   },
   "result": {
-    "id": "pigmentum:custom_paintbrush",
+    "id": "pigmentum:glow_paintbrush",
     "count": 1
   }
 }
