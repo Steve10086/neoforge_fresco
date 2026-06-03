@@ -1,4 +1,6 @@
-package com.astune.pigmentum;
+package com.astune.pigmentum.network;
+
+import com.astune.pigmentum.Pigmentum;
 
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;

@@ -1,4 +1,7 @@
-package com.astune.pigmentum;
+package com.astune.pigmentum.item;
+
+import com.astune.pigmentum.Pigmentum;
+import com.astune.pigmentum.network.SetPaletteColorPayload;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.component.DataComponents;

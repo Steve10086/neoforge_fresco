@@ -1,4 +1,8 @@
-package com.astune.pigmentum;
+package com.astune.pigmentum.screen;
+
+import com.astune.pigmentum.Pigmentum;
+import com.astune.pigmentum.item.CustomPaintbrush;
+import com.astune.pigmentum.network.SyncItemStackPayload;
 
 import com.astune.painter.api.BlendMode;
 import com.astune.painter.registry.ModDataComponents;

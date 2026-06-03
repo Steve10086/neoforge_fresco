@@ -1,4 +1,4 @@
-package com.astune.pigmentum;
+package com.astune.pigmentum.item;
 
 import com.astune.painter.api.BlendMode;
 import com.astune.painter.api.PaintPattern;

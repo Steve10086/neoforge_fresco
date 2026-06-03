@@ -1,6 +1,7 @@
 package com.astune.pigmentum;
 
 import com.astune.painter.api.render.CanvasRendererRegistry;
+import com.astune.pigmentum.glow.GlowPixelRenderer;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;

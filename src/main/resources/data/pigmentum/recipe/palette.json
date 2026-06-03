@@ -1,21 +1,16 @@
 {
   "type": "minecraft:crafting_shapeless",
   "category": "equipment",
-  "pattern": [
-    "WBR",
-    "YSG",
-    "P N"
+  "ingredients": [
+    { "item": "minecraft:white_dye" },
+    { "item": "minecraft:black_dye" },
+    { "item": "minecraft:red_dye" },
+    { "item": "minecraft:yellow_dye" },
+    { "item": "minecraft:blue_dye" },
+    { "item": "minecraft:brown_dye" },
+    { "item": "minecraft:green_dye" },
+    { "tag": "minecraft:signs" }
   ],
-  "key": {
-    "W": { "item": "minecraft:white_dye" },
-    "B": { "item": "minecraft:black_dye" },
-    "R": { "item": "minecraft:red_dye" },
-    "Y": { "item": "minecraft:yellow_dye" },
-    "G": { "item": "minecraft:blue_dye" },
-    "P": { "item": "minecraft:brown_dye" },
-    "N": { "item": "minecraft:green_dye" },
-    "S": { "tag": "minecraft:signs" }
-  },
   "result": {
     "id": "pigmentum:palette",
     "count": 1

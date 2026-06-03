@@ -1,6 +1,12 @@
 package com.astune.pigmentum;
 
 import com.astune.painter.api.imageProvider.CanvasImageProviderRegistry;
+import com.astune.pigmentum.glow.GlowImageProvider;
+import com.astune.pigmentum.item.CustomPaintbrush;
+import com.astune.pigmentum.item.GlowPaintbrush;
+import com.astune.pigmentum.item.PaletteItem;
+import com.astune.pigmentum.network.SetPaletteColorPayload;
+import com.astune.pigmentum.network.SyncItemStackPayload;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;

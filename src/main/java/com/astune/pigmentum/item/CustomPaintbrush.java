@@ -1,4 +1,6 @@
-package com.astune.pigmentum;
+package com.astune.pigmentum.item;
+
+import com.astune.pigmentum.screen.PaintbrushScreen;
 
 import com.astune.painter.api.BlendMode;
 import com.astune.painter.api.IPaintProvider;

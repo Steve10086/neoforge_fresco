@@ -1,4 +1,4 @@
-package com.astune.pigmentum;
+package com.astune.pigmentum.glow;
 
 import com.astune.painter.api.CanvasFace;
 import com.astune.painter.api.PixelMatrix;
