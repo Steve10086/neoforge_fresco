@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "pigmentum:item/stamp"
+  },
+  "overrides": [
+    { "predicate": { "pigmentum:active": 1.0 }, "model": "pigmentum:item/stamp_active" }
+  ]
+}

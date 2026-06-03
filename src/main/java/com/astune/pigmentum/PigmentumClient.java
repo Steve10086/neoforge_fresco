@@ -2,7 +2,10 @@ package com.astune.pigmentum;
 
 import com.astune.painter.api.render.CanvasRendererRegistry;
 import com.astune.pigmentum.glow.GlowPixelRenderer;
+import com.astune.pigmentum.item.StampItem;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
@@ -29,6 +32,14 @@ public class PigmentumClient {
         // Register glow pixel renderer for the night-glow pipeline
         CanvasRendererRegistry.registerPixelRenderer(new GlowPixelRenderer(), 10);
         Pigmentum.LOGGER.info("GlowPixelRenderer registered");
+
+        // Register stamp active predicate → switches texture when has stored face
+        ItemProperties.register(
+                Pigmentum.STAMP.get(),
+                ResourceLocation.fromNamespaceAndPath(Pigmentum.MODID, "active"),
+                (stack, level, entity, seed) ->
+                        stack.has(Pigmentum.STAMP_FACE.get()) ? 1.0F : 0.0F
+        );
 
         Pigmentum.LOGGER.info("HELLO FROM CLIENT SETUP");
         Pigmentum.LOGGER.info("MINECRAFT NAME >> {}", Minecraft.getInstance().getUser().getName());

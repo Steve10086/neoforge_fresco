@@ -5,6 +5,11 @@
   "item.pigmentum.palette": "Palette",
   "item.pigmentum.custom_paintbrush": "Custom Paintbrush",
   "item.pigmentum.glow_paintbrush": "Glow Paintbrush",
+  "item.pigmentum.stamp": "Stamp",
+  "item.pigmentum.stamp.stored": "Pixel data stored!",
+  "item.pigmentum.stamp.empty": "Empty (shift+right-click canvas to copy)",
+  "item.pigmentum.stamp.has_data": "Stored: %s×%s pixels",
+  "item.pigmentum.stamp.help": "Shift+right-click canvas to stamp, craft with another stamp to clear",
 
   "item.pigmentum.custom_paintbrush.color": "Color: %s",
   "item.pigmentum.custom_paintbrush.size": "Brush Size: %s",
