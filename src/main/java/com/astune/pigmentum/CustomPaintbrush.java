@@ -4,7 +4,6 @@ import com.astune.painter.api.BlendMode;
 import com.astune.painter.api.IPaintProvider;
 import com.astune.painter.api.PaintPattern;
 import com.astune.painter.api.PaintProviders;
-import com.astune.painter.api.PixelProvider;
 import com.astune.painter.registry.ModDataComponents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -51,40 +50,12 @@ public class CustomPaintbrush extends Item implements IPaintProvider {
     public PaintPattern getPattern(ItemStack brush, Player player, Level level,
                                    net.minecraft.core.BlockPos pos, net.minecraft.world.phys.Vec3 hit) {
         double size = brush.getOrDefault(ModDataComponents.BRUSH_SIZE.get(), 0.06);
-        if (size <= 0) return null;
-
         float opacity = brush.getOrDefault(ModDataComponents.OPACITY.get(), 1.0f);
         String modeStr = brush.getOrDefault(ModDataComponents.BLEND_MODE.get(), BlendMode.OVERWRITE.name());
-        final BlendMode blendMode = safeBlendMode(modeStr);
-
+        BlendMode blendMode = safeBlendMode(modeStr);
         int color = resolveOffhandColor(player);
 
-        return new PaintPattern(size * 2, size * 2, new PixelProvider() {
-            @Override
-            public BlendMode getBlendMode() {
-                return blendMode;
-            }
-
-            @Override
-            public Integer getPixel(double dx, double dy) {
-                double cx = dx - size;
-                double cy = dy - size;
-                double dist = Math.sqrt(cx * cx + cy * cy) / size;
-                if (dist > 1) return null;
-
-                float alphaFactor = 0.1f;
-                if (size > 0) {
-                    alphaFactor = opacity * (float) Math.pow(1.0 - dist, 0.5f);
-                }
-
-                int a = (int) (255 * alphaFactor);
-                if (a <= 0) return null;
-                int r = (color >> 16) & 0xFF;
-                int g = (color >> 8) & 0xFF;
-                int b = color & 0xFF;
-                return (a << 24) | (r << 16) | (g << 8) | b;
-            }
-        });
+        return CircularBrushPattern.create(size, opacity, blendMode, color);
     }
 
     @Override
@@ -92,7 +63,7 @@ public class CustomPaintbrush extends Item implements IPaintProvider {
         return 0.02;
     }
 
-    private static BlendMode safeBlendMode(String name) {
+    protected static BlendMode safeBlendMode(String name) {
         try {
             return BlendMode.valueOf(name);
         } catch (IllegalArgumentException e) {

@@ -28,10 +28,14 @@ sourceSets.main.resources {
 
 repositories {
     // Add here additional repositories if required by some of the dependencies below.
-    maven {
-        name = "Modrinth"
-        url = "https://api.modrinth.com/maven"
-        content {
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = "https://api.modrinth.com/maven"
+            }
+        }
+        filter {
             includeGroup "maven.modrinth"
         }
     }
@@ -126,7 +130,7 @@ configurations {
 
 dependencies {
     // Painter - 画布 API 底层模组
-    implementation "maven.modrinth:9Q6E7yfO:nSFM3Pk4"
+    implementation "maven.modrinth:9Q6E7yfO:0.5.+"
 
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime

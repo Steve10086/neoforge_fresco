@@ -1,5 +1,6 @@
 package com.astune.pigmentum;
 
+import com.astune.painter.api.imageProvider.CanvasImageProviderRegistry;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
@@ -78,6 +79,9 @@ public class Pigmentum {
     /** Custom paintbrush with circular pattern and offhand color source. */
     public static final DeferredItem<Item> CUSTOM_PAINTBRUSH = ITEMS.register("custom_paintbrush", CustomPaintbrush::new);
 
+    /** Glow paintbrush — inherits CustomPaintbrush and writes glow effect layer. */
+    public static final DeferredItem<Item> GLOW_PAINTBRUSH = ITEMS.register("glow_paintbrush", GlowPaintbrush::new);
+
     // Creates a new food item with the id "pigmentum:example_id", nutrition 1 and saturation 2
     public static final DeferredItem<Item> EXAMPLE_ITEM = ITEMS.registerSimpleItem("example_item", new Item.Properties().food(new FoodProperties.Builder()
             .alwaysEdible().nutrition(1).saturationModifier(2f).build()));
@@ -92,6 +96,7 @@ public class Pigmentum {
             .displayItems((parameters, output) -> {
                 output.accept(PALETTE.get()); // Add the palette to the tab
                 output.accept(CUSTOM_PAINTBRUSH.get()); // Add the custom paintbrush to the tab
+                output.accept(GLOW_PAINTBRUSH.get()); // Add the glow paintbrush to the tab
                 output.accept(EXAMPLE_ITEM.get()); // Add the example item to the tab. For your own tabs, this method is preferred over the event
             }).build());
 
@@ -148,8 +153,9 @@ public class Pigmentum {
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
-        // Some common setup code
-        LOGGER.info("HELLO FROM COMMON SETUP");
+        // Register glow image provider for the night-glow pipeline
+        CanvasImageProviderRegistry.register(new GlowImageProvider(), 1);
+        LOGGER.info("GlowImageProvider registered");
 
         if (Config.LOG_DIRT_BLOCK.getAsBoolean()) {
             LOGGER.info("DIRT BLOCK >> {}", BuiltInRegistries.BLOCK.getKey(Blocks.DIRT));

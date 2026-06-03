@@ -4,6 +4,7 @@
   "item.pigmentum.example_item": "Example Item",
   "item.pigmentum.palette": "Palette",
   "item.pigmentum.custom_paintbrush": "Custom Paintbrush",
+  "item.pigmentum.glow_paintbrush": "Glow Paintbrush",
 
   "item.pigmentum.custom_paintbrush.color": "Color: %s",
   "item.pigmentum.custom_paintbrush.size": "Brush Size: %s",

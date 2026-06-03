@@ -1,5 +1,6 @@
 package com.astune.pigmentum;
 
+import com.astune.painter.api.render.CanvasRendererRegistry;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -24,7 +25,10 @@ public class PigmentumClient {
 
     @SubscribeEvent
     static void onClientSetup(FMLClientSetupEvent event) {
-        // Some client setup code
+        // Register glow pixel renderer for the night-glow pipeline
+        CanvasRendererRegistry.registerPixelRenderer(new GlowPixelRenderer(), 10);
+        Pigmentum.LOGGER.info("GlowPixelRenderer registered");
+
         Pigmentum.LOGGER.info("HELLO FROM CLIENT SETUP");
         Pigmentum.LOGGER.info("MINECRAFT NAME >> {}", Minecraft.getInstance().getUser().getName());
     }
