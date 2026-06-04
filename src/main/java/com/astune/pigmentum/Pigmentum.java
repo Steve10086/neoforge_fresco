@@ -6,6 +6,7 @@ import com.astune.pigmentum.glow.GlowImageProvider;
 import com.astune.pigmentum.item.CustomPaintbrush;
 import com.astune.pigmentum.item.GlowPaintbrush;
 import com.astune.pigmentum.item.PaletteItem;
+import com.astune.pigmentum.item.SprayCanItem;
 import com.astune.pigmentum.item.StampItem;
 import com.astune.pigmentum.network.SetPaletteColorPayload;
 import com.astune.pigmentum.network.SyncItemStackPayload;
@@ -81,6 +82,24 @@ public class Pigmentum {
                     .build()
     );
 
+    /** Spray density (0~1) — probability that a pixel is placed. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Double>> SPRAY_DENSITY = DATA_COMPONENTS.register(
+            "spray_density",
+            () -> DataComponentType.<Double>builder()
+                    .persistent(Codec.DOUBLE)
+                    .networkSynchronized(ByteBufCodecs.DOUBLE)
+                    .build()
+    );
+
+    /** Spray tint (ARGB) — dye color from offhand; 0=no tint, density-skip returns null. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> SPRAY_TINT = DATA_COMPONENTS.register(
+            "spray_tint",
+            () -> DataComponentType.<Integer>builder()
+                    .persistent(Codec.INT)
+                    .networkSynchronized(ByteBufCodecs.VAR_INT)
+                    .build()
+    );
+
     /** Stamp mode: false=default (canvas only), true=background (block texture + canvas). */
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Boolean>> STAMP_BACKGROUND = DATA_COMPONENTS.register(
             "stamp_background",
@@ -111,6 +130,9 @@ public class Pigmentum {
     /** Stamp — copies pixel data from canvas and places as one-shot pattern. */
     public static final DeferredItem<Item> STAMP = ITEMS.register("stamp", StampItem::new);
 
+    /** Spray can — circular spray with configurable density, fixed ADD blend mode. */
+    public static final DeferredItem<Item> SPRAY_CAN = ITEMS.register("spray_can", SprayCanItem::new);
+
     // Creates a new food item with the id "pigmentum:example_id", nutrition 1 and saturation 2
     public static final DeferredItem<Item> EXAMPLE_ITEM = ITEMS.registerSimpleItem("example_item", new Item.Properties().food(new FoodProperties.Builder()
             .alwaysEdible().nutrition(1).saturationModifier(2f).build()));
@@ -127,6 +149,7 @@ public class Pigmentum {
                 output.accept(CUSTOM_PAINTBRUSH.get()); // Add the custom paintbrush to the tab
                 output.accept(GLOW_PAINTBRUSH.get()); // Add the glow paintbrush to the tab
                 output.accept(STAMP.get()); // Add the stamp to the tab
+                output.accept(SPRAY_CAN.get()); // Add the spray can to the tab
                 output.accept(EXAMPLE_ITEM.get()); // Add the example item to the tab. For your own tabs, this method is preferred over the event
             }).build());
 

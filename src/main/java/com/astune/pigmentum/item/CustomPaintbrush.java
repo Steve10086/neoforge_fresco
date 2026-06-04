@@ -13,10 +13,8 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.DyeItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
@@ -45,7 +43,7 @@ public class CustomPaintbrush extends Item implements IPaintProvider {
     @Override
     public Integer getColor(ItemStack brush, Player player, Level level, net.minecraft.core.BlockPos pos,
                             com.astune.painter.api.CanvasFace face, int pixelX, int pixelY) {
-        return resolveOffhandColor(player);
+        return OffhandColorResolver.resolve(player);
     }
 
     @Override
@@ -55,9 +53,9 @@ public class CustomPaintbrush extends Item implements IPaintProvider {
         float opacity = brush.getOrDefault(ModDataComponents.OPACITY.get(), 1.0f);
         String modeStr = brush.getOrDefault(ModDataComponents.BLEND_MODE.get(), BlendMode.OVERWRITE.name());
         BlendMode blendMode = safeBlendMode(modeStr);
-        int color = resolveOffhandColor(player);
+        int color = OffhandColorResolver.resolve(player);
 
-        return CircularBrushPattern.create(size, opacity, blendMode, color);
+        return CircularBrushPattern.create(size, opacity, blendMode, color, CircularBrushPattern.DEFAULT_BLUR);
     }
 
     @Override
@@ -71,40 +69,6 @@ public class CustomPaintbrush extends Item implements IPaintProvider {
         } catch (IllegalArgumentException e) {
             return BlendMode.OVERWRITE;
         }
-    }
-
-    // ── 副手颜色解析 ────────────────────────────────────────────
-
-    /**
-     * 从副手物品获取颜色：
-     * <ul>
-     *   <li>染料 → 对应 DyeColor</li>
-     *   <li>墨囊 → 黑色 (0xFF000000)</li>
-     *   <li>Palette → 已存储颜色</li>
-     *   <li>其他 → 白色 (0xFFFFFFFF)</li>
-     * </ul>
-     */
-    public static int resolveOffhandColor(Player player) {
-        if (player == null) return 0xFFFFFFFF;
-        ItemStack offhand = player.getOffhandItem();
-
-        // 1. 染料
-        if (offhand.getItem() instanceof DyeItem dyeItem) {
-            return 0xFF000000 | dyeItem.getDyeColor().getTextureDiffuseColor();
-        }
-
-        // 2. 墨囊 → 黑色
-        if (offhand.is(Items.INK_SAC)) {
-            return 0xFF000000;
-        }
-
-        // 3. Palette 已存储颜色
-        if (offhand.getItem() instanceof PaletteItem) {
-            return PaletteItem.getCurrentColor(offhand);
-        }
-
-        // 4. 默认白色
-        return 0xFFFFFFFF;
     }
 
     // ── 右键打开配置屏幕 ─────────────────────────────────────────

@@ -6,8 +6,10 @@
   "item.pigmentum.custom_paintbrush": "Custom Paintbrush",
   "item.pigmentum.glow_paintbrush": "Glow Paintbrush",
   "item.pigmentum.stamp": "Stamp",
+  "item.pigmentum.spray_can": "Spray Can",
+
   "item.pigmentum.stamp.stored": "Pixel data stored!",
-  "item.pigmentum.stamp.empty": "Empty (shift+right-click canvas to copy)",
+  "item.pigmentum.stamp.empty": "Empty (shift+right-click on air to switch mode, on block to stamp)",
   "item.pigmentum.stamp.has_data": "Stored: %s×%s pixels",
   "item.pigmentum.stamp.help": "Shift+right-click on air to switch mode, on block to stamp",
   "item.pigmentum.stamp.mode": "Mode: %s",
@@ -18,13 +20,25 @@
   "item.pigmentum.custom_paintbrush.size": "Brush Size: %s",
   "item.pigmentum.custom_paintbrush.opacity": "Opacity: %s%%",
   "item.pigmentum.custom_paintbrush.blend": "Blend: %s",
-  "item.pigmentum.custom_paintbrush.help": "Right-click to configure, offhand for color source",
+  "item.pigmentum.custom_paintbrush.help": "Shift+right-click to configure, offhand for color source",
+
+  "item.pigmentum.spray_can.size": "Size: %s",
+  "item.pigmentum.spray_can.feather": "Feather: %s%%",
+  "item.pigmentum.spray_can.density": "Density: %s%%",
+  "item.pigmentum.spray_can.opacity": "Opacity: %s%%",
+  "item.pigmentum.spray_can.help": "Shift+right-click to configure",
 
   "pigmentum.paintbrush_screen.title": "Paintbrush Config",
   "pigmentum.paintbrush_screen.size": "Brush Size",
   "pigmentum.paintbrush_screen.opacity": "Opacity",
   "pigmentum.paintbrush_screen.blend": "Blend Mode: %s",
   "pigmentum.paintbrush_screen.current_color": "Current: %s",
+
+  "pigmentum.spray_can_screen.title": "Spray Can Config",
+  "pigmentum.spray_can_screen.size": "Size",
+  "pigmentum.spray_can_screen.feather": "Feather",
+  "pigmentum.spray_can_screen.density": "Density",
+  "pigmentum.spray_can_screen.opacity": "Opacity",
 
   "pigmentum.configuration.title": "Pigmentum Configs",
   "pigmentum.configuration.section.pigmentum.common.toml": "Pigmentum Configs",

@@ -1,7 +1,7 @@
 package com.astune.pigmentum.screen;
 
 import com.astune.pigmentum.Pigmentum;
-import com.astune.pigmentum.item.CustomPaintbrush;
+import com.astune.pigmentum.item.OffhandColorResolver;
 import com.astune.pigmentum.network.SyncItemStackPayload;
 import com.astune.pigmentum.screen.widget.TexturedButton;
 import com.astune.pigmentum.screen.widget.TexturedSlider;
@@ -103,7 +103,7 @@ public class PaintbrushScreen extends Screen {
 
         for (var w : this.renderables) w.render(g, mouseX, mouseY, partialTick);
 
-        int color = CustomPaintbrush.resolveOffhandColor(
+        int color = OffhandColorResolver.resolve(
                 this.minecraft != null ? this.minecraft.player : null);
         String hex = String.format("#%06X", color & 0x00FFFFFF);
         g.drawCenteredString(this.font,

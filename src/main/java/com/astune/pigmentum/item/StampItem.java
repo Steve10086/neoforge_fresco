@@ -45,7 +45,7 @@ public class StampItem extends Item implements IPaintProvider {
         PaintProviders.register(this, this);
     }
 
-    // ── 模式切换：Shift+右键空气 ──────────────────────────────────
+    static boolean sActive = true;
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
