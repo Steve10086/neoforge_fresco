@@ -27,6 +27,7 @@ public class PaintbrushScreen extends Screen {
 
     private static final int BUTTON_W = 150;
     private static final int BUTTON_H = 20;
+    private static final double SIZE_MIN = 0.01, SIZE_MAX = 0.25;
 
     private int panelX, panelY, panelW, panelH;
 
@@ -66,8 +67,9 @@ public class PaintbrushScreen extends Screen {
 
         addRenderableWidget(new TexturedSlider(cx - BUTTON_W / 2, y, BUTTON_W, BUTTON_H,
                 Component.translatable("pigmentum.paintbrush_screen.size"),
-                (brushSize - 0.01) / (0.25 - 0.01),
-                val -> { brushSize = 0.01 + val * (0.25 - 0.01); saveParameters(); }));
+                (brushSize - SIZE_MIN) / (SIZE_MAX - SIZE_MIN),
+                val -> { brushSize = SIZE_MIN + val * (SIZE_MAX - SIZE_MIN); saveParameters(); },
+                v -> String.format("%.3f", SIZE_MIN + v * (SIZE_MAX - SIZE_MIN))));
         y += 30;
 
         addRenderableWidget(new TexturedSlider(cx - BUTTON_W / 2, y, BUTTON_W, BUTTON_H,

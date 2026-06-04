@@ -26,7 +26,8 @@
   "item.pigmentum.spray_can.feather": "Feather: %s%%",
   "item.pigmentum.spray_can.density": "Density: %s%%",
   "item.pigmentum.spray_can.opacity": "Opacity: %s%%",
-  "item.pigmentum.spray_can.help": "Shift+right-click to configure",
+  "item.pigmentum.spray_can.tint": "Tint: %s",
+  "item.pigmentum.spray_can.help": "Shift+right-click to configure, right-click with offhand dye to tint",
 
   "pigmentum.paintbrush_screen.title": "Paintbrush Config",
   "pigmentum.paintbrush_screen.size": "Brush Size",

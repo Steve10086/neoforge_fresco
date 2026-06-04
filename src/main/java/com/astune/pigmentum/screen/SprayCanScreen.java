@@ -15,6 +15,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 public class SprayCanScreen extends Screen {
 
     private static final ResourceLocation TEX_PANEL_BG =
@@ -31,6 +34,11 @@ public class SprayCanScreen extends Screen {
     private double brushSize, density;
     private float feather;
     private float opacity;
+
+    // 各参数的实际值范围
+    private static final double SIZE_MIN = 0.05, SIZE_MAX = 1.0;
+    private static final double FEATHER_MIN = 0.2, FEATHER_MAX = 1.0;
+    private static final double DENSITY_MIN = 0.01, DENSITY_MAX = 1.0;
 
     public SprayCanScreen(ItemStack stack, int slot) {
         super(Component.translatable("pigmentum.spray_can_screen.title"));
@@ -54,33 +62,40 @@ public class SprayCanScreen extends Screen {
         int cx = this.width / 2;
         int y = panelY + 35;
 
-        addSlider(cx, y, "pigmentum.spray_can_screen.size",
-                (brushSize - 0.05) / (1.5 - 0.05),
-                val -> { brushSize = 0.05 + val * (1.5 - 0.05); save(); });
+        // 大小
+        addRenderableWidget(new TexturedSlider(cx - WIDGET_W / 2, y, WIDGET_W, WIDGET_H,
+                Component.translatable("pigmentum.spray_can_screen.size"),
+                (brushSize - SIZE_MIN) / (SIZE_MAX - SIZE_MIN),
+                val -> { brushSize = SIZE_MIN + val * (SIZE_MAX - SIZE_MIN); save(); },
+                v -> String.format("%.3f", SIZE_MIN + v * (SIZE_MAX - SIZE_MIN))));
         y += 30;
 
-        addSlider(cx, y, "pigmentum.spray_can_screen.feather",
-                (feather - 0.2) / (1.0 - 0.2),
-                val -> { feather = (float)(0.2 + val * (1.0 - 0.2)); save(); });
+        // 羽化
+        addRenderableWidget(new TexturedSlider(cx - WIDGET_W / 2, y, WIDGET_W, WIDGET_H,
+                Component.translatable("pigmentum.spray_can_screen.feather"),
+                (feather - FEATHER_MIN) / (FEATHER_MAX - FEATHER_MIN),
+                val -> { feather = (float) (FEATHER_MIN + val * (FEATHER_MAX - FEATHER_MIN)); save(); },
+                v -> String.format("%.0f%%", (FEATHER_MIN + v * (FEATHER_MAX - FEATHER_MIN)) * 100)));
         y += 30;
 
-        addSlider(cx, y, "pigmentum.spray_can_screen.density",
-                (density - 0.01) / (1.0 - 0.01),
-                val -> { density = 0.01 + val * (1.0 - 0.01); save(); });
+        // 密度
+        addRenderableWidget(new TexturedSlider(cx - WIDGET_W / 2, y, WIDGET_W, WIDGET_H,
+                Component.translatable("pigmentum.spray_can_screen.density"),
+                (density - DENSITY_MIN) / (DENSITY_MAX - DENSITY_MIN),
+                val -> { density = DENSITY_MIN + val * (DENSITY_MAX - DENSITY_MIN); save(); },
+                v -> String.format("%.0f%%", (DENSITY_MIN + v * (DENSITY_MAX - DENSITY_MIN)) * 100)));
         y += 30;
 
-        addSlider(cx, y, "pigmentum.spray_can_screen.opacity",
+        // 不透明度（0~1，直接映射）
+        addRenderableWidget(new TexturedSlider(cx - WIDGET_W / 2, y, WIDGET_W, WIDGET_H,
+                Component.translatable("pigmentum.spray_can_screen.opacity"),
                 opacity,
-                val -> { opacity = (float)(double)val; save(); });
+                val -> { opacity = (float)(double)val; save(); },
+                v -> String.format("%.0f%%", v * 100)));
         y += 40;
 
         addRenderableWidget(new TexturedButton(cx - 50, panelY + panelH - 28, 100, WIDGET_H,
                 CommonComponents.GUI_DONE, btn -> this.onClose()));
-    }
-
-    private void addSlider(int cx, int y, String key, double init, java.util.function.Consumer<Double> cb) {
-        addRenderableWidget(new TexturedSlider(cx - WIDGET_W / 2, y, WIDGET_W, WIDGET_H,
-                Component.translatable(key), init, cb));
     }
 
     @Override

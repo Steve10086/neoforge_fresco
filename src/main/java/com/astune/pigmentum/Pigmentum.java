@@ -91,7 +91,7 @@ public class Pigmentum {
                     .build()
     );
 
-    /** Spray tint (ARGB) — dye color from offhand; 0=no tint, density-skip returns null. */
+    /** Spray tint (ARGB) — dye color stored on spray can; 0 = no tint. */
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> SPRAY_TINT = DATA_COMPONENTS.register(
             "spray_tint",
             () -> DataComponentType.<Integer>builder()

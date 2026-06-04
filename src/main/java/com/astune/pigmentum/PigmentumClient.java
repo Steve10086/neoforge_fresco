@@ -33,6 +33,14 @@ public class PigmentumClient {
         CanvasRendererRegistry.registerPixelRenderer(new GlowPixelRenderer(), 10);
         Pigmentum.LOGGER.info("GlowPixelRenderer registered");
 
+        // Spray can dirty predicate
+        ItemProperties.register(
+                Pigmentum.SPRAY_CAN.get(),
+                ResourceLocation.fromNamespaceAndPath(Pigmentum.MODID, "dirty"),
+                (stack, level, entity, seed) ->
+                        stack.getOrDefault(Pigmentum.SPRAY_TINT.get(), 0) != 0 ? 1.0F : 0.0F
+        );
+
         // Stamp predicates
         ItemProperties.register(
                 Pigmentum.STAMP.get(),

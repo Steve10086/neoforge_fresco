@@ -10,6 +10,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class TexturedSlider extends AbstractWidget {
 
@@ -26,17 +27,24 @@ public class TexturedSlider extends AbstractWidget {
 
     private double value;
     private final Consumer<Double> onChanged;
+    private final Function<Double, String> valueFormatter;
 
     public TexturedSlider(int x, int y, int w, int h, Component label, double init, Consumer<Double> cb) {
+        this(x, y, w, h, label, init, cb, v -> String.format("%.0f%%", v * 100));
+    }
+
+    public TexturedSlider(int x, int y, int w, int h, Component label, double init,
+                           Consumer<Double> cb, Function<Double, String> valueFormatter) {
         super(x, y, w, h, label);
         this.value = init;
         this.onChanged = cb;
+        this.valueFormatter = valueFormatter;
     }
 
     @Override
     protected void renderWidget(GuiGraphics g, int mx, int my, float pt) {
         Component display = Component.literal(
-                this.getMessage().getString() + ": " + String.format("%.0f%%", value * 100));
+                this.getMessage().getString() + ": " + valueFormatter.apply(value));
         int labelW = Minecraft.getInstance().font.width(display);
         g.drawString(Minecraft.getInstance().font, display,
                 this.getX() + (this.getWidth() - labelW) / 2, this.getY() - 12, 0xFFCCCCCC);

@@ -4,7 +4,6 @@ import com.astune.painter.api.BlendMode;
 import com.astune.painter.api.IPaintProvider;
 import com.astune.painter.api.PaintPattern;
 import com.astune.painter.api.PaintProviders;
-import com.astune.painter.api.PixelProvider;
 import com.astune.painter.registry.ModDataComponents;
 import com.astune.pigmentum.Pigmentum;
 import com.astune.pigmentum.screen.SprayCanScreen;
@@ -24,8 +23,6 @@ import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 
-import java.util.Random;
-
 public class SprayCanItem extends Item implements IPaintProvider {
 
     public SprayCanItem() {
@@ -39,8 +36,6 @@ public class SprayCanItem extends Item implements IPaintProvider {
         );
         PaintProviders.register(this, this);
     }
-
-    // ── IPaintProvider ──────────────────────────────────────────
 
     @Override
     public Integer getColor(ItemStack brush, Player player, Level level,
@@ -60,14 +55,14 @@ public class SprayCanItem extends Item implements IPaintProvider {
         int color = OffhandColorResolver.resolve(player);
         int tint = brush.getOrDefault(Pigmentum.SPRAY_TINT.get(), 0);
 
-        // 距离缩放（1格→×1.0, 4格→×1.5 大小; ×1.0→×0.5 不透明度）
+        // 距离缩放（1格→×1.0, 4格→×3.0大小/×0.1不透明度; 大小硬上限1.5）
         double dist = hit.distanceTo(player.getEyePosition());
         double t = Math.clamp((dist - 1.0) / 3.0, 0.0, 1.0);
-        double size = baseSize * (1.0 + t * 0.5);       // 1.0× → 1.5×
-        double effectiveOpacity = baseOpacity * (1.0 - t * 0.5); // 1.0× → 0.5×
+        double size = Math.min(baseSize * (1.0 + t * 2.0), 1.5);
+        double effectiveOpacity = baseOpacity * (1.0 - t * 0.9);
 
-        return CircularBrushPattern.create(size, (float)effectiveOpacity, BlendMode.ADD,
-                color, (double)feather, density, tint);
+        return CircularBrushPattern.create(size, (float) effectiveOpacity, BlendMode.ADD,
+                color, (double) feather, density, tint);
     }
 
     @Override
@@ -75,7 +70,7 @@ public class SprayCanItem extends Item implements IPaintProvider {
         return 0.02;
     }
 
-    // ── 右键：Shift+配置 / 无Shift+染料副手 = 着色 / 纯点击 = 配置 ──
+    // ── 右键：Shift+打开配置 / 副手染料=着色 ─────────────────────
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
@@ -90,19 +85,15 @@ public class SprayCanItem extends Item implements IPaintProvider {
             return InteractionResultHolder.success(stack);
         }
 
-        // 右手点击，副手有染料 → 着色
-        if (hand == InteractionHand.MAIN_HAND) {
-            ItemStack offhand = player.getOffhandItem();
-            if (offhand.getItem() instanceof DyeItem dye) {
-                int tint = 0xFF000000 | dye.getDyeColor().getTextureDiffuseColor();
-                stack.set(Pigmentum.SPRAY_TINT.get(), tint);
-                if (!player.isCreative()) offhand.shrink(1);
-                if (!level.isClientSide()) {
-                    level.playSound(null, player.blockPosition(),
-                            SoundEvents.DYE_USE, SoundSource.PLAYERS, 0.6f, 1.2f);
-                }
-                return InteractionResultHolder.success(stack);
-            }
+        // 副手染料 → 着色
+        ItemStack offhand = player.getOffhandItem();
+        if (offhand.getItem() instanceof DyeItem dye) {
+            int tint = 0xFF000000 | dye.getDyeColor().getTextureDiffuseColor();
+            stack.set(Pigmentum.SPRAY_TINT.get(), tint);
+            if (!player.isCreative()) offhand.shrink(1);
+            level.playSound(null, player.blockPosition(),
+                    SoundEvents.DYE_USE, SoundSource.PLAYERS, 0.6f, 1.2f);
+            return InteractionResultHolder.success(stack);
         }
 
         return InteractionResultHolder.pass(stack);

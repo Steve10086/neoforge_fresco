@@ -2,5 +2,8 @@
   "parent": "minecraft:item/generated",
   "textures": {
     "layer0": "pigmentum:item/spray_can"
-  }
+  },
+  "overrides": [
+    { "predicate": { "pigmentum:dirty": 1.0 }, "model": "pigmentum:item/spray_can_dirty" }
+  ]
 }
