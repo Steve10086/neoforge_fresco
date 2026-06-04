@@ -38,7 +38,7 @@ public class PigmentumClient {
                 Pigmentum.SPRAY_CAN.get(),
                 ResourceLocation.fromNamespaceAndPath(Pigmentum.MODID, "dirty"),
                 (stack, level, entity, seed) ->
-                        stack.getOrDefault(Pigmentum.SPRAY_TINT.get(), 0) != 0 ? 1.0F : 0.0F
+                        com.astune.pigmentum.item.SprayCanItem.hasDye(stack) ? 1.0F : 0.0F
         );
 
         // Stamp predicates
