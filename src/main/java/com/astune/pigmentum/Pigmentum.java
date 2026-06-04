@@ -81,6 +81,15 @@ public class Pigmentum {
                     .build()
     );
 
+    /** Stamp mode: false=default (canvas only), true=background (block texture + canvas). */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Boolean>> STAMP_BACKGROUND = DATA_COMPONENTS.register(
+            "stamp_background",
+            () -> DataComponentType.<Boolean>builder()
+                    .persistent(Codec.BOOL)
+                    .networkSynchronized(ByteBufCodecs.BOOL)
+                    .build()
+    );
+
     // ---- Blocks ----
 
     // Creates a new Block with the id "pigmentum:example_block", combining the namespace and path

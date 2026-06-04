@@ -9,7 +9,10 @@
   "item.pigmentum.stamp.stored": "Pixel data stored!",
   "item.pigmentum.stamp.empty": "Empty (shift+right-click canvas to copy)",
   "item.pigmentum.stamp.has_data": "Stored: %s×%s pixels",
-  "item.pigmentum.stamp.help": "Shift+right-click canvas to stamp, craft with another stamp to clear",
+  "item.pigmentum.stamp.help": "Shift+right-click on air to switch mode, on block to stamp",
+  "item.pigmentum.stamp.mode": "Mode: %s",
+  "item.pigmentum.stamp.mode.default": "Default",
+  "item.pigmentum.stamp.mode.background": "Background",
 
   "item.pigmentum.custom_paintbrush.color": "Color: %s",
   "item.pigmentum.custom_paintbrush.size": "Brush Size: %s",

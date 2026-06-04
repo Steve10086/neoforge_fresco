@@ -3,39 +3,22 @@ package com.astune.pigmentum.screen;
 import com.astune.pigmentum.Pigmentum;
 import com.astune.pigmentum.item.CustomPaintbrush;
 import com.astune.pigmentum.network.SyncItemStackPayload;
+import com.astune.pigmentum.screen.widget.TexturedButton;
+import com.astune.pigmentum.screen.widget.TexturedSlider;
 
 import com.astune.painter.api.BlendMode;
 import com.astune.painter.registry.ModDataComponents;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractButton;
-import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.WidgetSprites;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 public class PaintbrushScreen extends Screen {
 
-    private static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
-            ResourceLocation.fromNamespaceAndPath(Pigmentum.MODID, "widget/button"),
-            ResourceLocation.fromNamespaceAndPath(Pigmentum.MODID, "widget/button_disabled"),
-            ResourceLocation.fromNamespaceAndPath(Pigmentum.MODID, "widget/button_highlighted")
-    );
-    private static final ResourceLocation TEX_SLIDER =
-            ResourceLocation.fromNamespaceAndPath(Pigmentum.MODID, "widget/slider");
-    private static final ResourceLocation TEX_SLIDER_HIGHLIGHTED =
-            ResourceLocation.fromNamespaceAndPath(Pigmentum.MODID, "widget/slider_highlighted");
-    private static final ResourceLocation TEX_SLIDER_HANDLE =
-            ResourceLocation.fromNamespaceAndPath(Pigmentum.MODID, "widget/slider_handle");
-    private static final ResourceLocation TEX_SLIDER_HANDLE_HIGHLIGHTED =
-            ResourceLocation.fromNamespaceAndPath(Pigmentum.MODID, "widget/slider_handle_highlighted");
     private static final ResourceLocation TEX_PANEL_BG =
             ResourceLocation.fromNamespaceAndPath(Pigmentum.MODID, "widget/panel_background");
 
@@ -44,7 +27,6 @@ public class PaintbrushScreen extends Screen {
 
     private static final int BUTTON_W = 150;
     private static final int BUTTON_H = 20;
-    private static final int HANDLE_W = 8;
 
     private int panelX, panelY, panelW, panelH;
 
@@ -142,65 +124,5 @@ public class PaintbrushScreen extends Screen {
         brushStack.set(ModDataComponents.BRUSH_SIZE.get(), brushSize);
         brushStack.set(ModDataComponents.OPACITY.get(), opacity);
         brushStack.set(ModDataComponents.BLEND_MODE.get(), blendMode.name());
-    }
-
-    // ── TexturedButton ────────────────────────────────────────
-
-    private static class TexturedButton extends AbstractButton {
-        private final OnPress onPress;
-        TexturedButton(int x, int y, int w, int h, Component msg, OnPress onPress) {
-            super(x, y, w, h, msg); this.onPress = onPress;
-        }
-        @Override
-        protected void renderWidget(GuiGraphics g, int mx, int my, float pt) {
-            g.blitSprite(BUTTON_SPRITES.get(this.active, this.isHovered()),
-                    this.getX(), this.getY(), this.getWidth(), this.getHeight());
-            int tc = this.active ? 0xFFFFFF : 0xA0A0A0;
-            g.drawCenteredString(Minecraft.getInstance().font, this.getMessage(),
-                    this.getX() + this.getWidth() / 2,
-                    this.getY() + (this.getHeight() - 8) / 2,
-                    tc | Mth.ceil(this.alpha * 255.0F) << 24);
-        }
-
-        @Override
-        public void onPress() { this.onPress.onPress(this); }
-
-        @Override
-        protected void updateWidgetNarration(NarrationElementOutput o) { this.defaultButtonNarrationText(o); }
-    }
-
-    @FunctionalInterface
-    private interface OnPress { void onPress(TexturedButton button); }
-
-    // ── TexturedSlider ────────────────────────────────────────
-
-    private static class TexturedSlider extends AbstractWidget {
-        private double value;
-        private final java.util.function.Consumer<Double> onChanged;
-        TexturedSlider(int x, int y, int w, int h, Component label, double init,
-                       java.util.function.Consumer<Double> cb) {
-            super(x, y, w, h, label); this.value = init; this.onChanged = cb;
-        }
-        @Override
-        protected void renderWidget(GuiGraphics g, int mx, int my, float pt) {
-            Component display = Component.literal(
-                    this.getMessage().getString() + ": " + String.format("%.0f%%", value * 100));
-            int labelW = Minecraft.getInstance().font.width(display);
-            g.drawString(Minecraft.getInstance().font, display,
-                    this.getX() + (this.getWidth() - labelW) / 2, this.getY() - 12, 0xFFCCCCCC);
-
-            g.blitSprite(this.isFocused() ? TEX_SLIDER_HIGHLIGHTED : TEX_SLIDER,
-                    this.getX(), this.getY(), this.getWidth(), this.getHeight());
-            g.blitSprite(this.isHovered ? TEX_SLIDER_HANDLE_HIGHLIGHTED : TEX_SLIDER_HANDLE,
-                    this.getX() + (int)(this.value * (this.width - HANDLE_W)),
-                    this.getY(), HANDLE_W, this.getHeight());
-        }
-        @Override public void onClick(double mx, double my) { updateValue(mx); }
-        @Override protected void onDrag(double mx, double my, double dx, double dy) { updateValue(mx); }
-        @Override protected void updateWidgetNarration(NarrationElementOutput o) { this.defaultButtonNarrationText(o); }
-        private void updateValue(double mx) {
-            value = Mth.clamp((mx - (this.getX() + HANDLE_W / 2.0)) / (this.width - HANDLE_W), 0.0, 1.0);
-            onChanged.accept(value);
-        }
     }
 }

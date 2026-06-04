@@ -33,12 +33,18 @@ public class PigmentumClient {
         CanvasRendererRegistry.registerPixelRenderer(new GlowPixelRenderer(), 10);
         Pigmentum.LOGGER.info("GlowPixelRenderer registered");
 
-        // Register stamp active predicate → switches texture when has stored face
+        // Stamp predicates
         ItemProperties.register(
                 Pigmentum.STAMP.get(),
                 ResourceLocation.fromNamespaceAndPath(Pigmentum.MODID, "active"),
                 (stack, level, entity, seed) ->
                         stack.has(Pigmentum.STAMP_FACE.get()) ? 1.0F : 0.0F
+        );
+        ItemProperties.register(
+                Pigmentum.STAMP.get(),
+                ResourceLocation.fromNamespaceAndPath(Pigmentum.MODID, "background"),
+                (stack, level, entity, seed) ->
+                        stack.getOrDefault(Pigmentum.STAMP_BACKGROUND.get(), false) ? 1.0F : 0.0F
         );
 
         Pigmentum.LOGGER.info("HELLO FROM CLIENT SETUP");

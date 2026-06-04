@@ -4,6 +4,7 @@
     "layer0": "pigmentum:item/stamp"
   },
   "overrides": [
-    { "predicate": { "pigmentum:active": 1.0 }, "model": "pigmentum:item/stamp_active" }
+    { "predicate": { "pigmentum:active": 1.0 }, "model": "pigmentum:item/stamp_active" },
+    { "predicate": { "pigmentum:background": 1.0 }, "model": "pigmentum:item/stamp_background" }
   ]
 }
