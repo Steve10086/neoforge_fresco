@@ -65,6 +65,11 @@ public class PigmentumClient {
                 ResourceLocation.fromNamespaceAndPath(Pigmentum.MODID, "background"),
                 (stack, level, entity, seed) ->
                         stack.getOrDefault(Pigmentum.STAMP_BACKGROUND.get(), false) ? 1.0F : 0.0F);
+
+        ItemProperties.register(Pigmentum.CLOTH.get(),
+                ResourceLocation.fromNamespaceAndPath(Pigmentum.MODID, "saturation"),
+                (stack, level, entity, seed) ->
+                        stack.getOrDefault(Pigmentum.CLOTH_SATURATION.get(), 0) / 100f);
     }
 
     @SubscribeEvent(priority = EventPriority.LOW)

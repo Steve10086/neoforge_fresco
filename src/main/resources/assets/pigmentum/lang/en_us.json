@@ -7,6 +7,7 @@
   "item.pigmentum.glow_paintbrush": "Glow Paintbrush",
   "item.pigmentum.stamp": "Stamp",
   "item.pigmentum.spray_can": "Spray Can",
+  "item.pigmentum.cloth": "Cloth",
 
   "item.pigmentum.stamp.stored": "Pixel data stored!",
   "item.pigmentum.stamp.empty": "Empty (shift+right-click on air to switch mode, on block to stamp)",
@@ -29,6 +30,14 @@
   "item.pigmentum.spray_can.tint": "Tint: %s",
   "item.pigmentum.spray_can.help": "Shift+right-click to configure, right-click with offhand dye to tint",
 
+  "item.pigmentum.cloth.size": "Size: %s",
+  "item.pigmentum.cloth.opacity": "Opacity: %s%%",
+  "item.pigmentum.cloth.blur_radius": "Blur Radius: %s px",
+  "item.pigmentum.cloth.blocks": "Coverage: %s blocks",
+  "item.pigmentum.cloth.help": "Shift+right-click to configure, paints blended canvas pixels",
+  "item.pigmentum.cloth.tint": "Tint: %s",
+  "item.pigmentum.cloth.reset": "Cloth cleaned!",
+
   "pigmentum.paintbrush_screen.title": "Paintbrush Config",
   "pigmentum.paintbrush_screen.size": "Brush Size",
   "pigmentum.paintbrush_screen.opacity": "Opacity",
@@ -40,6 +49,12 @@
   "pigmentum.spray_can_screen.feather": "Feather",
   "pigmentum.spray_can_screen.density": "Density",
   "pigmentum.spray_can_screen.opacity": "Opacity",
+
+  "pigmentum.cloth_screen.title": "Cloth Config",
+  "pigmentum.cloth_screen.size": "Size",
+  "pigmentum.cloth_screen.opacity": "Opacity",
+  "pigmentum.cloth_screen.feather": "Feather",
+  "pigmentum.cloth_screen.clean": "Clean",
 
   "pigmentum.configuration.title": "Pigmentum Configs",
   "pigmentum.configuration.section.pigmentum.common.toml": "Pigmentum Configs",

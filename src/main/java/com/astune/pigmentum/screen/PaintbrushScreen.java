@@ -104,13 +104,6 @@ public class PaintbrushScreen extends Screen {
         g.drawCenteredString(this.font, this.title, this.width / 2, panelY + 6, 0xFFFFFF);
 
         for (var w : this.renderables) w.render(g, mouseX, mouseY, partialTick);
-
-        int color = OffhandColorResolver.resolve(
-                this.minecraft != null ? this.minecraft.player : null);
-        String hex = String.format("#%06X", color & 0x00FFFFFF);
-        g.drawCenteredString(this.font,
-                Component.translatable("pigmentum.paintbrush_screen.current_color", hex),
-                this.width / 2, panelY + panelH - 10, color & 0x00FFFFFF);
     }
 
     @Override public boolean isPauseScreen() { return false; }

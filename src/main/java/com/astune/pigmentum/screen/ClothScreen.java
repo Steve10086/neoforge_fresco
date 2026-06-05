@@ -2,58 +2,54 @@ package com.astune.pigmentum.screen;
 
 import com.astune.painter.registry.ModDataComponents;
 import com.astune.pigmentum.Pigmentum;
-import com.astune.pigmentum.item.OffhandColorResolver;
 import com.astune.pigmentum.network.SyncItemStackPayload;
 import com.astune.pigmentum.screen.widget.TexturedButton;
 import com.astune.pigmentum.screen.widget.TexturedSlider;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-import java.util.function.Consumer;
-import java.util.function.Function;
-
-public class SprayCanScreen extends Screen {
+public class ClothScreen extends Screen {
 
     private static final ResourceLocation TEX_PANEL_BG =
             ResourceLocation.fromNamespaceAndPath(Pigmentum.MODID, "widget/panel_background");
 
-    private final ItemStack stack;
+    private final ItemStack clothStack;
     private final int slot;
 
     private static final int WIDGET_W = 150;
     private static final int WIDGET_H = 20;
+    private static final double SIZE_MIN = 0.01, SIZE_MAX = 0.5;
 
     private int panelX, panelY, panelW, panelH;
+    private double brushSize;
+    private float opacity, feather;
+    private boolean needsSync = false;
 
-    private double brushSize, density;
-    private float feather;
-    private float opacity;
-
-    // 各参数的实际值范围
-    private static final double SIZE_MIN = 0.05, SIZE_MAX = 1.0;
-    private static final double FEATHER_MIN = 0.2, FEATHER_MAX = 1.0;
-    private static final double DENSITY_MIN = 0.01, DENSITY_MAX = 1.0;
-
-    public SprayCanScreen(ItemStack stack, int slot) {
-        super(Component.translatable("pigmentum.spray_can_screen.title"));
-        this.stack = stack;
+    public ClothScreen(ItemStack clothStack, int slot) {
+        super(Component.translatable("pigmentum.cloth_screen.title"));
+        this.clothStack = clothStack;
         this.slot = slot;
-        this.brushSize = stack.getOrDefault(ModDataComponents.BRUSH_SIZE.get(), 0.5);
-        this.feather = stack.getOrDefault(ModDataComponents.FEATHER_STRENGTH.get(), 0.7f);
-        this.density = stack.getOrDefault(Pigmentum.SPRAY_DENSITY.get(), 0.5);
-        this.opacity = stack.getOrDefault(ModDataComponents.OPACITY.get(), 0.5f);
+        this.brushSize = clothStack.getOrDefault(ModDataComponents.BRUSH_SIZE.get(), 0.12);
+        this.opacity = clothStack.getOrDefault(ModDataComponents.OPACITY.get(), 0.8f);
+        this.feather = clothStack.getOrDefault(ModDataComponents.FEATHER_STRENGTH.get(), 1.0f);
     }
 
     @Override
     protected void init() {
         int contentW = WIDGET_W + 20;
-        int contentH = 225;
+        int contentH = 180;
         this.panelX = (this.width - contentW) / 2;
         this.panelY = (this.height - contentH) / 2;
         this.panelW = contentW;
@@ -62,36 +58,38 @@ public class SprayCanScreen extends Screen {
         int cx = this.width / 2;
         int y = panelY + 35;
 
-        // 大小
         addRenderableWidget(new TexturedSlider(cx - WIDGET_W / 2, y, WIDGET_W, WIDGET_H,
-                Component.translatable("pigmentum.spray_can_screen.size"),
+                Component.translatable("pigmentum.cloth_screen.size"),
                 (brushSize - SIZE_MIN) / (SIZE_MAX - SIZE_MIN),
                 val -> { brushSize = SIZE_MIN + val * (SIZE_MAX - SIZE_MIN); save(); },
                 v -> String.format("%.3f", SIZE_MIN + v * (SIZE_MAX - SIZE_MIN))));
         y += 30;
 
-        // 羽化
         addRenderableWidget(new TexturedSlider(cx - WIDGET_W / 2, y, WIDGET_W, WIDGET_H,
-                Component.translatable("pigmentum.spray_can_screen.feather"),
-                (feather - FEATHER_MIN) / (FEATHER_MAX - FEATHER_MIN),
-                val -> { feather = (float) (FEATHER_MIN + val * (FEATHER_MAX - FEATHER_MIN)); save(); },
-                v -> String.format("%.0f%%", (FEATHER_MIN + v * (FEATHER_MAX - FEATHER_MIN)) * 100)));
-        y += 30;
-
-        // 密度
-        addRenderableWidget(new TexturedSlider(cx - WIDGET_W / 2, y, WIDGET_W, WIDGET_H,
-                Component.translatable("pigmentum.spray_can_screen.density"),
-                (density - DENSITY_MIN) / (DENSITY_MAX - DENSITY_MIN),
-                val -> { density = DENSITY_MIN + val * (DENSITY_MAX - DENSITY_MIN); save(); },
-                v -> String.format("%.0f%%", (DENSITY_MIN + v * (DENSITY_MAX - DENSITY_MIN)) * 100)));
-        y += 30;
-
-        // 不透明度（0~1，直接映射）
-        addRenderableWidget(new TexturedSlider(cx - WIDGET_W / 2, y, WIDGET_W, WIDGET_H,
-                Component.translatable("pigmentum.spray_can_screen.opacity"),
+                Component.translatable("pigmentum.cloth_screen.opacity"),
                 opacity,
                 val -> { opacity = (float)(double)val; save(); },
                 v -> String.format("%.0f%%", v * 100)));
+        y += 30;
+
+        addRenderableWidget(new TexturedSlider(cx - WIDGET_W / 2, y, WIDGET_W, WIDGET_H,
+                Component.translatable("pigmentum.cloth_screen.feather"),
+                feather,
+                val -> { feather = (float)(double)val; save(); },
+                v -> String.format("%.0f%%", v * 100)));
+        y += 30;
+
+        addRenderableWidget(new TexturedButton(cx - WIDGET_W / 2, y, WIDGET_W, WIDGET_H,
+                Component.translatable("pigmentum.cloth_screen.clean"),
+                btn -> {
+                    clothStack.set(Pigmentum.CLOTH_TINT.get(), 0xFFFFFFFF);
+                    clothStack.set(Pigmentum.CLOTH_SATURATION.get(), 0);
+                    needsSync = true;
+                    if (minecraft != null && minecraft.player != null) {
+                        minecraft.player.displayClientMessage(
+                                Component.translatable("item.pigmentum.cloth.reset"), true);
+                    }
+                }));
         y += 40;
 
         addRenderableWidget(new TexturedButton(cx - 50, panelY + panelH - 28, 100, WIDGET_H,
@@ -114,14 +112,18 @@ public class SprayCanScreen extends Screen {
     @Override
     public void onClose() {
         save();
-        PacketDistributor.sendToServer(new SyncItemStackPayload(slot, stack.copy()));
+        sync();
         super.onClose();
     }
 
     private void save() {
-        stack.set(ModDataComponents.BRUSH_SIZE.get(), brushSize);
-        stack.set(ModDataComponents.FEATHER_STRENGTH.get(), feather);
-        stack.set(Pigmentum.SPRAY_DENSITY.get(), density);
-        stack.set(ModDataComponents.OPACITY.get(), opacity);
+        clothStack.set(ModDataComponents.BRUSH_SIZE.get(), brushSize);
+        clothStack.set(ModDataComponents.OPACITY.get(), opacity);
+        clothStack.set(ModDataComponents.FEATHER_STRENGTH.get(), feather);
     }
+
+    private void sync() {
+        PacketDistributor.sendToServer(new SyncItemStackPayload(slot, clothStack.copy()));
+    }
+
 }
