@@ -1,0 +1,88 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'gradle.properties'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Read mod version
+        run: |
+          VERSION=$(grep "^mod_version=" gradle.properties | cut -d'=' -f2 | tr -d '[:space:]')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Check if version already released
+        run: |
+          if git rev-parse "v${{ env.VERSION }}" >/dev/null 2>&1; then
+            echo "SKIP=true" >> $GITHUB_ENV
+            echo "Tag v${{ env.VERSION }} already exists, skipping."
+          else
+            echo "SKIP=false" >> $GITHUB_ENV
+            echo "New version ${{ env.VERSION }}, proceeding."
+          fi
+
+      - name: Setup JDK 21
+        if: env.SKIP == 'false'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        if: env.SKIP == 'false'
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        if: env.SKIP == 'false'
+        run: chmod +x ./gradlew
+
+      - name: Build
+        if: env.SKIP == 'false'
+        run: ./gradlew build
+
+      - name: Create and push tag
+        if: env.SKIP == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "v${{ env.VERSION }}"
+          git push origin "v${{ env.VERSION }}"
+
+      - name: Create GitHub Release
+        if: env.SKIP == 'false'
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: "Fresco v${{ env.VERSION }}"
+          files: build/libs/*.jar
+          generate_release_notes: true
+
+      - name: Publish to Modrinth
+        if: env.SKIP == 'false'
+        run: ./gradlew modrinth
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+
+      - name: Clear changelog for next release
+        if: env.SKIP == 'false'
+        run: |
+          cat > CHANGELOG.md << 'EOF'
+          # Changelog
+
+          <!-- Add changes for the next release here -->
+          EOF
+          git add CHANGELOG.md
+          git commit -m "chore: clear changelog after v${{ env.VERSION }} release"
+          git push origin main

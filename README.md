@@ -1,25 +1,78 @@
+# Fresco
 
-Installation information
-=======
+A NeoForge content mod for Minecraft 1.21.1, built on top of the [Painter](https://github.com/Steve10086/neoforge_pigmentum) canvas API. Fresco adds a set of brush-like tools — paintbrushes, stamps, spray cans, and cloths — that let players paint, copy, spray, and blend pixels on any block surface.
 
-This template repository can be directly cloned to get you started with a new
-mod. Simply create a new repository cloned from this one, by following the
-instructions provided by [GitHub](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
+## Requirements
 
-Once you have your clone, simply open the repository in the IDE of your choice. The usual recommendation for an IDE is either IntelliJ IDEA or Eclipse.
+- **Minecraft** 1.21.1
+- **NeoForge** 21.1.228+
+- **[Painter](https://modrinth.com/mod/pigmentum)** 0.5.6.9beta+ (bundled as dependency)
 
-If at any point you are missing libraries in your IDE, or you've run into problems you can
-run `gradlew --refresh-dependencies` to refresh the local cache. `gradlew clean` to reset everything 
-{this does not affect your code} and then start the process again.
+## Items
 
-Mapping Names:
-============
-By default, the MDK is configured to use the official mapping names from Mojang for methods and fields 
-in the Minecraft codebase. These names are covered by a specific license. All modders should be aware of this
-license. For the latest license text, refer to the mapping file itself, or the reference copy here:
-https://github.com/NeoForged/NeoForm/blob/main/Mojang.md
+### Palette
+Pick a color from the world. With the palette in your offhand, press the pick-key to grab the pixel color under your crosshair. The palette stores a single ARGB color and can be used by other tools as a color source.
 
-Additional Resources: 
-==========
-Community Documentation: https://docs.neoforged.net/  
-NeoForged Discord: https://discord.neoforged.net/
+> **Recipe:** 7 dyes (white/black/red/yellow/blue/brown/green) + any sign → Palette
+
+---
+
+### Custom Paintbrush
+A circular brush that paints with the color from your offhand item:
+- **Dye items** → that dye's color
+- **Ink Sac** → black
+- **Palette** → the palette's stored color
+- **Other / empty** → white
+
+Shift + right-click opens a config screen where you can adjust brush size, opacity, and blend mode (overwrite / add / multiply / erase).
+
+> **Recipe:** stick + ink sac + string×2 + button + feather → Custom Paintbrush
+
+---
+
+### Glow Paintbrush
+Inherits the Custom Paintbrush's circular pattern and config screen, but additionally writes a glow effect layer to every painted pixel. The glow pipeline (BlendFunction → CanvasImageProvider → CanvasPixelRenderer) renders with full brightness, producing an emissive night-glow effect.
+
+> **Recipe:** stick + glow ink sac + string×2 + button + feather → Glow Paintbrush
+
+---
+
+### Spray Can
+A circular spray brush with adjustable feather, density (random pixel skipping), opacity, and size. Blend mode is fixed to **add**. The spray size increases and opacity decreases based on distance from the target (1 block → ×1.0 size, 4 blocks → ×1.5 size / ×0.5 opacity).
+
+Right-click with a dye in your offhand to tint the spray can. When tinted, density-skipped pixels are filled with a brightness-varied version of the tint color instead of being empty. The tinted dye is stored in the spray can's internal container and can be retrieved.
+
+Shift + right-click opens the config screen.
+
+> **Recipe:** iron nugget + button / paper + glass bottle + paper / iron ingot → Spray Can
+
+---
+
+### Stamp
+Copies pixel data from a canvas face and replaces it elsewhere. Two modes, toggled by shift + right-click on air:
+
+- **Default** — copies only the canvas pixel data
+- **Background** — captures the block face texture + overlays canvas pixels
+
+Shift + right-click a block to store pixels. The stored face is preserved (non-destructive) and can be placed multiple times. Craft two stamps together to clear stored data.
+
+> **Recipe:** stick + iron ingot×2 + plank + paper → Stamp
+
+---
+
+### Cloth
+A blending tool that reads surrounding canvas pixels, computes a blurred composite matrix, and paints the averaged result back. As you paint, the cloth accumulates tint from the canvas pixels (1% blend weight per stroke, up to 100% saturation). The accumulated tint is injected back into the blurred output, creating a color-mixing effect.
+
+Shift + right-click on air resets the tint. Shift + right-click on a block opens the config screen (size, opacity, feather). The cloth texture changes based on saturation level (clean → cloth_30 → cloth_60 → cloth_dirty).
+
+> **Recipe:** white wool×3 → Cloth
+
+---
+
+## Dependencies
+
+- **[Painter (Pigmentum)](https://github.com/Steve10086/neoforge_pigmentum)** — the underlying canvas API that enables painting on block surfaces
+
+## License
+
+MIT License.

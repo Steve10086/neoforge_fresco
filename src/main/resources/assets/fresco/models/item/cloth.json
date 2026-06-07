@@ -1,0 +1,11 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "fresco:item/cloth"
+  },
+  "overrides": [
+    { "predicate": { "fresco:saturation": 0.2 }, "model": "fresco:item/cloth_30" },
+    { "predicate": { "fresco:saturation": 0.5 }, "model": "fresco:item/cloth_60" },
+    { "predicate": { "fresco:saturation": 0.8 }, "model": "fresco:item/cloth_dirty" }
+  ]
+}

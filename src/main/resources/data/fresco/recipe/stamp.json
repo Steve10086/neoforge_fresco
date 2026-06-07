@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    " S ",
+    "IWI",
+    " P "
+  ],
+  "key": {
+    "S": { "item": "minecraft:stick" },
+    "I": { "item": "minecraft:iron_ingot" },
+    "W": { "tag": "minecraft:planks" },
+    "P": { "item": "minecraft:paper" }
+  },
+  "result": {
+    "id": "fresco:stamp",
+    "count": 1
+  }
+}

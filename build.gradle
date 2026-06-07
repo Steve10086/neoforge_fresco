@@ -2,6 +2,7 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'net.neoforged.moddev' version '2.0.141'
+    id 'com.modrinth.minotaur' version '2.+'
     id 'idea'
 }
 
@@ -196,4 +197,18 @@ idea {
         downloadSources = true
         downloadJavadoc = true
     }
+}
+
+// Modrinth publishing via Minotaur
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN")
+    projectId = "fresco"
+    versionNumber = mod_version
+    versionName = "Fresco ${mod_version} for NeoForge ${minecraft_version}"
+    uploadFile = jar
+    gameVersions = [minecraft_version]
+    loaders = ["neoforge"]
+    changelog = rootProject.file("CHANGELOG.md").exists()
+        ? rootProject.file("CHANGELOG.md").text
+        : "No changelog specified."
 }

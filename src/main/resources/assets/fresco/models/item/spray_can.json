@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "fresco:item/spray_can"
+  },
+  "overrides": [
+    { "predicate": { "fresco:dirty": 1.0 }, "model": "fresco:item/spray_can_dirty" }
+  ]
+}

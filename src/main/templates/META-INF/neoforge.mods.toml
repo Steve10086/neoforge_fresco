@@ -46,7 +46,7 @@ authors="astune"
 
 # The description text for the mod (multi line!) (#mandatory)
 description='''
-Example mod description.
+Painting tools.
 '''
 
 # The [[mixins]] block allows you to declare your mixin config to FML so that it gets loaded.
@@ -92,7 +92,7 @@ config="${mod_id}.mixins.json"
 [[dependencies.${mod_id}]]
     modId="painter"
     type="required"
-    versionRange="[0.5.6.4,)"
+    versionRange="[0.5.6.8,)"
     ordering="NONE"
     side="BOTH"
 

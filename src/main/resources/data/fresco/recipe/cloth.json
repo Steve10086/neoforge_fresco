@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "WWW"
+  ],
+  "key": {
+    "W": { "item": "minecraft:white_wool" }
+  },
+  "result": {
+    "id": "fresco:cloth",
+    "count": 1
+  }
+}

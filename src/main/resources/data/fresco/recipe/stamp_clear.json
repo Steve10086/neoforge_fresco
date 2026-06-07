@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    { "item": "fresco:stamp" }
+  ],
+  "result": {
+    "id": "fresco:stamp",
+    "count": 1
+  }
+}
