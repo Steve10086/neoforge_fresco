@@ -1,6 +1,5 @@
 # Changelog
 
-## v1.0.0
+## v1.0.2
 
-- Stamp brush now has fixed orientation on canvas faces (override `transformPatternAxes` to align with block face grid instead of player view direction)
-- Fixed stamp vertical face orientation (NORTH/SOUTH/EAST/WEST) where the v-axis was inverted
+- New Eraser item: circular brush that reduces pixel opacity via custom BlendFunction; adjustable size, feather, and opacity via shift+right-click config screen

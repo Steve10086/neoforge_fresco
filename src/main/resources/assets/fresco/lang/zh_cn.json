@@ -8,6 +8,7 @@
   "item.fresco.stamp": "印章",
   "item.fresco.spray_can": "喷罐",
   "item.fresco.cloth": "抹布",
+  "item.fresco.eraser": "橡皮",
 
   "item.fresco.stamp.stored": "已存储像素数据！",
   "item.fresco.stamp.empty": "空（蹲下右键空气切换模式，蹲下右键方块提取）",
@@ -55,6 +56,16 @@
   "fresco.cloth_screen.opacity": "不透明度",
   "fresco.cloth_screen.feather": "羽化",
   "fresco.cloth_screen.clean": "清洗",
+
+  "fresco.eraser_screen.title": "橡皮设置",
+  "fresco.eraser_screen.size": "大小",
+  "fresco.eraser_screen.opacity": "不透明度",
+  "fresco.eraser_screen.feather": "羽化",
+
+  "item.fresco.eraser.size": "大小：%s",
+  "item.fresco.eraser.opacity": "不透明度：%s%%",
+  "item.fresco.eraser.feather": "羽化：%s%%",
+  "item.fresco.eraser.help": "蹲下右键配置，右键擦除画布",
 
   "fresco.configuration.title": "fresco 配置",
   "fresco.configuration.section.fresco.common.toml": "fresco 配置",

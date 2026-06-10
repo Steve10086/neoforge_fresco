@@ -8,6 +8,7 @@
   "item.fresco.stamp": "Stamp",
   "item.fresco.spray_can": "Spray Can",
   "item.fresco.cloth": "Cloth",
+  "item.fresco.eraser": "Eraser",
 
   "item.fresco.stamp.stored": "Pixel data stored!",
   "item.fresco.stamp.empty": "Empty (shift+right-click on air to switch mode, on block to stamp)",
@@ -55,6 +56,16 @@
   "fresco.cloth_screen.opacity": "Opacity",
   "fresco.cloth_screen.feather": "Feather",
   "fresco.cloth_screen.clean": "Clean",
+
+  "fresco.eraser_screen.title": "Eraser Config",
+  "fresco.eraser_screen.size": "Size",
+  "fresco.eraser_screen.opacity": "Opacity",
+  "fresco.eraser_screen.feather": "Feather",
+
+  "item.fresco.eraser.size": "Size: %s",
+  "item.fresco.eraser.opacity": "Opacity: %s%%",
+  "item.fresco.eraser.feather": "Feather: %s%%",
+  "item.fresco.eraser.help": "Shift+right-click to configure, right-click to erase",
 
   "fresco.configuration.title": "fresco Configs",
   "fresco.configuration.section.fresco.common.toml": "fresco Configs",

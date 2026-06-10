@@ -5,6 +5,7 @@ import com.astune.painter.api.imageProvider.CanvasImageProviderRegistry;
 import com.astune.fresco.glow.GlowImageProvider;
 import com.astune.fresco.item.ClothItem;
 import com.astune.fresco.item.CustomPaintbrush;
+import com.astune.fresco.item.EraserItem;
 import com.astune.fresco.item.GlowPaintbrush;
 import com.astune.fresco.item.PaletteItem;
 import com.astune.fresco.item.SprayCanItem;
@@ -144,6 +145,9 @@ public class Fresco {
     /** Cloth — blur tool that blends surrounding canvas pixels. */
     public static final DeferredItem<Item> CLOTH = ITEMS.register("cloth", ClothItem::new);
 
+    /** Eraser — reduces opacity of painted pixels with circular pattern. */
+    public static final DeferredItem<Item> ERASER = ITEMS.register("eraser", EraserItem::new);
+
     // ---- Creative Tabs ----
 
     // Creates a creative tab with the id "fresco:example_tab" for the example item, that is placed after the combat tab
@@ -158,6 +162,7 @@ public class Fresco {
                 output.accept(STAMP.get()); // Add the stamp to the tab
                 output.accept(SPRAY_CAN.get()); // Add the spray can to the tab
                 output.accept(CLOTH.get()); // Add the cloth to the tab
+                output.accept(ERASER.get()); // Add the eraser to the tab
             }).build());
 
     // The constructor for the mod class is the first code that is run when your mod is loaded.
