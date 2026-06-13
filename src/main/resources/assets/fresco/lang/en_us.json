@@ -9,6 +9,7 @@
   "item.fresco.spray_can": "Spray Can",
   "item.fresco.cloth": "Cloth",
   "item.fresco.eraser": "Eraser",
+  "item.fresco.scraper": "Scraper",
 
   "item.fresco.stamp.stored": "Pixel data stored!",
   "item.fresco.stamp.empty": "Empty (shift+right-click on air to switch mode, on block to stamp)",
@@ -66,6 +67,20 @@
   "item.fresco.eraser.opacity": "Opacity: %s%%",
   "item.fresco.eraser.feather": "Feather: %s%%",
   "item.fresco.eraser.help": "Shift+right-click to configure, right-click to erase",
+
+  "item.fresco.scraper.size": "Size: %s",
+  "item.fresco.scraper.thickness": "Thickness: %s%%",
+  "item.fresco.scraper.angle": "Angle: %s",
+  "item.fresco.scraper.angle_locked": "Locked",
+  "item.fresco.scraper.angle_default": "Default",
+  "item.fresco.scraper.help": "Shift+right-click to configure, offhand for color source",
+
+  "fresco.scraper_screen.title": "Scraper Config",
+  "fresco.scraper_screen.size": "Size",
+  "fresco.scraper_screen.thickness": "Thickness",
+  "fresco.scraper_screen.angle": "Angle: %s",
+  "fresco.scraper_screen.angle_locked": "Locked",
+  "fresco.scraper_screen.angle_default": "Default",
 
   "fresco.configuration.title": "fresco Configs",
   "fresco.configuration.section.fresco.common.toml": "fresco Configs",

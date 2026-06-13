@@ -7,6 +7,7 @@ import com.astune.fresco.item.ClothItem;
 import com.astune.fresco.item.CustomPaintbrush;
 import com.astune.fresco.item.EraserItem;
 import com.astune.fresco.item.GlowPaintbrush;
+import com.astune.fresco.item.ScraperItem;
 import com.astune.fresco.item.PaletteItem;
 import com.astune.fresco.item.SprayCanItem;
 import com.astune.fresco.item.StampItem;
@@ -122,6 +123,24 @@ public class Fresco {
                     .build()
     );
 
+    /** Scraper thickness (0~1) — controls how much canvas color is absorbed into internal buffer. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Float>> SCRAPER_THICKNESS = DATA_COMPONENTS.register(
+            "scraper_thickness",
+            () -> DataComponentType.<Float>builder()
+                    .persistent(Codec.FLOAT)
+                    .networkSynchronized(ByteBufCodecs.FLOAT)
+                    .build()
+    );
+
+    /** Scraper angle mode: false=default (recalculate each tick), true=locked (first hit angle preserved). */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Boolean>> SCRAPER_ANGLE_LOCKED = DATA_COMPONENTS.register(
+            "scraper_angle_locked",
+            () -> DataComponentType.<Boolean>builder()
+                    .persistent(Codec.BOOL)
+                    .networkSynchronized(ByteBufCodecs.BOOL)
+                    .build()
+    );
+
     // ---- Blocks ----
 
 
@@ -148,6 +167,9 @@ public class Fresco {
     /** Eraser — reduces opacity of painted pixels with circular pattern. */
     public static final DeferredItem<Item> ERASER = ITEMS.register("eraser", EraserItem::new);
 
+    /** Scraper — triangle brush that absorbs canvas colors into an internal buffer while painting. */
+    public static final DeferredItem<Item> SCRAPER = ITEMS.register("scraper", ScraperItem::new);
+
     // ---- Creative Tabs ----
 
     // Creates a creative tab with the id "fresco:example_tab" for the example item, that is placed after the combat tab
@@ -163,6 +185,7 @@ public class Fresco {
                 output.accept(SPRAY_CAN.get()); // Add the spray can to the tab
                 output.accept(CLOTH.get()); // Add the cloth to the tab
                 output.accept(ERASER.get()); // Add the eraser to the tab
+                output.accept(SCRAPER.get()); // Add the scraper to the tab
             }).build());
 
     // The constructor for the mod class is the first code that is run when your mod is loaded.
@@ -235,6 +258,10 @@ public class Fresco {
                         if (clientStack.getItem() instanceof com.astune.fresco.item.ClothItem) {
                             serverStack.set(CLOTH_TINT.get(), clientStack.getOrDefault(CLOTH_TINT.get(), 0));
                             serverStack.set(CLOTH_SATURATION.get(), clientStack.getOrDefault(CLOTH_SATURATION.get(), 0));
+                        }
+                        if (clientStack.getItem() instanceof com.astune.fresco.item.ScraperItem) {
+                            serverStack.set(SCRAPER_THICKNESS.get(), clientStack.getOrDefault(SCRAPER_THICKNESS.get(), 0.5f));
+                            serverStack.set(SCRAPER_ANGLE_LOCKED.get(), clientStack.getOrDefault(SCRAPER_ANGLE_LOCKED.get(), false));
                         }
                     }
                 }

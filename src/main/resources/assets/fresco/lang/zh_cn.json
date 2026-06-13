@@ -9,6 +9,7 @@
   "item.fresco.spray_can": "喷罐",
   "item.fresco.cloth": "抹布",
   "item.fresco.eraser": "橡皮",
+  "item.fresco.scraper": "刮刀",
 
   "item.fresco.stamp.stored": "已存储像素数据！",
   "item.fresco.stamp.empty": "空（蹲下右键空气切换模式，蹲下右键方块提取）",
@@ -66,6 +67,20 @@
   "item.fresco.eraser.opacity": "不透明度：%s%%",
   "item.fresco.eraser.feather": "羽化：%s%%",
   "item.fresco.eraser.help": "蹲下右键配置，右键擦除画布",
+
+  "item.fresco.scraper.size": "大小：%s",
+  "item.fresco.scraper.thickness": "厚度：%s%%",
+  "item.fresco.scraper.angle": "角度：%s",
+  "item.fresco.scraper.angle_locked": "锁死",
+  "item.fresco.scraper.angle_default": "默认",
+  "item.fresco.scraper.help": "蹲下右键配置，副手提供颜色来源",
+
+  "fresco.scraper_screen.title": "刮刀设置",
+  "fresco.scraper_screen.size": "大小",
+  "fresco.scraper_screen.thickness": "厚度",
+  "fresco.scraper_screen.angle": "角度：%s",
+  "fresco.scraper_screen.angle_locked": "锁死",
+  "fresco.scraper_screen.angle_default": "默认",
 
   "fresco.configuration.title": "fresco 配置",
   "fresco.configuration.section.fresco.common.toml": "fresco 配置",
