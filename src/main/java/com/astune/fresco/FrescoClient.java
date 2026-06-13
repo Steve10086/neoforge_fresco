@@ -1,9 +1,11 @@
 package com.astune.fresco;
 
+import com.astune.painter.api.IPaintProvider;
 import com.astune.painter.api.render.CanvasRendererRegistry;
 import com.astune.fresco.glow.GlowPixelRenderer;
 import com.astune.fresco.item.DyeTooltipComponent;
 import com.astune.fresco.item.SprayCanItem;
+import com.astune.painter.item.DebugPaintbrush;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -11,6 +13,7 @@ import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.neoforged.api.distmarker.Dist;
@@ -25,6 +28,7 @@ import net.neoforged.neoforge.client.event.RegisterClientTooltipComponentFactori
 import net.neoforged.neoforge.client.event.RenderTooltipEvent;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 @Mod(value = Fresco.MODID, dist = Dist.CLIENT)
 @EventBusSubscriber(modid = Fresco.MODID, value = Dist.CLIENT)
@@ -67,6 +71,16 @@ public class FrescoClient {
                 ResourceLocation.fromNamespaceAndPath(Fresco.MODID, "saturation"),
                 (stack, level, entity, seed) ->
                         stack.getOrDefault(Fresco.CLOTH_SATURATION.get(), 0) / 100f);
+    }
+
+    @SubscribeEvent
+    public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+        ItemStack stack = event.getItemStack();
+        if (stack.getItem() instanceof IPaintProvider) {
+            // 取消对原方块的交互，只让画笔处理
+            event.setCancellationResult(InteractionResult.SUCCESS);
+            event.setCanceled(true);
+        }
     }
 
     @SubscribeEvent(priority = EventPriority.LOW)

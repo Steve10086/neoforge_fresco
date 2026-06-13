@@ -305,7 +305,7 @@ public class ClothItem extends Item implements IPaintProvider {
             Minecraft mc = Minecraft.getInstance();
             if (mc.player == null || mc.level == null) return;
             Player player = mc.player;
-            if (!player.level().isClientSide) return;
+            if (!player.level().isClientSide || !(player.getMainHandItem().getItem() instanceof ClothItem)) return;
 
             if (net.minecraft.client.Minecraft.getInstance().options.keyUse.isDown()) {
                 wasPressed = true;

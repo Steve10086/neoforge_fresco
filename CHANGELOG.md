@@ -1,5 +1,6 @@
 # Changelog
 
-## v1.0.2
+## v1.0.3
 
-- New Eraser item: circular brush that reduces pixel opacity via custom BlendFunction; adjustable size, feather, and opacity via shift+right-click config screen
+- Fix incorrect package sending logic in ClothItem
+- Allowing drawing on interactive blocks
