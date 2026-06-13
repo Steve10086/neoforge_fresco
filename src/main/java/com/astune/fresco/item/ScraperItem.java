@@ -28,6 +28,8 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
+import static com.astune.fresco.item.ScraperPattern.SCRAPER_MASK;
+
 public class ScraperItem extends Item implements IPaintProvider {
 
     private static final double SIZE_DEF = 0.12;
@@ -46,18 +48,6 @@ public class ScraperItem extends Item implements IPaintProvider {
 
     @Override public Double getStep() { return 0.02; }
 
-    // ── 面方向固定（同 ClothItem，垂直面 v=(0,-1,0)）──
-    private static Vec3[] tangents(Direction face) {
-        Vec3 u = switch (face) {
-            case NORTH, SOUTH, UP, DOWN -> new Vec3(1, 0, 0);
-            case EAST, WEST -> new Vec3(0, 0, 1);
-        };
-        Vec3 v = switch (face) {
-            case NORTH, SOUTH, EAST, WEST -> new Vec3(0, -1, 0);
-            case UP, DOWN -> new Vec3(0, 0, 1);
-        };
-        return new Vec3[] { u, v };
-    }
 
     @Override
     public Vec3[] transformPatternAxes(Player player, Vec3 hitPoint, Direction face, double w, double h) {
@@ -66,10 +56,22 @@ public class ScraperItem extends Item implements IPaintProvider {
             Vec3 origin = hitPoint.subtract(lockedAxes[0].scale(w / 2)).subtract(lockedAxes[1].scale(h / 2));
             return new Vec3[] { origin, lockedAxes[0], lockedAxes[1] };
         }
-        Vec3[] axes = tangents(face);
-        if (locked) lockedAxes = new Vec3[] { axes[0], axes[1] };
-        Vec3 origin = hitPoint.subtract(axes[0].scale(w / 2)).subtract(axes[1].scale(h / 2));
-        return new Vec3[] { origin, axes[0], axes[1] };
+        Vec3 normalVec = Vec3.atLowerCornerOf(face.getNormal());
+        Vec3 lookVec = player.getViewVector(1.0F);
+        Vec3 right = lookVec.cross(normalVec).normalize();
+        Vec3 up = normalVec.cross(right).normalize();
+        Vec3 origin;
+        if (right.lengthSqr() < 0.001 || up.lengthSqr() < 0.001) {
+            origin = new Vec3(0.0, 1.0, 0.0);
+            right = origin.cross(normalVec).normalize();
+            up = normalVec.cross(right).normalize();
+        }
+
+        origin = hitPoint.subtract(right.scale(w / 2.0)).subtract(up.scale(h / 2.0));
+        Vec3 rightTotal = right.scale(w);
+        Vec3 upTotal = up.scale(h);
+        if (locked) lockedAxes = new Vec3[] { rightTotal, upTotal };
+        return new Vec3[]{origin, rightTotal, upTotal};
     }
 
     // ── 笔画状态（自上次落笔开始一直维持）──
@@ -109,6 +111,8 @@ public class ScraperItem extends Item implements IPaintProvider {
         return false;
     }
 
+
+
     // ── getPattern ──
     @Override
     public PaintPattern getPattern(ItemStack brush, Player player, Level level,
@@ -116,7 +120,6 @@ public class ScraperItem extends Item implements IPaintProvider {
         double brushSize = brush.getOrDefault(ModDataComponents.BRUSH_SIZE.get(), SIZE_DEF);
         if (brushSize <= 0 || strokeBuffer == null) return null;
 
-        if (strokeBuffer == null) return null;
         double wW = brushSize * 2, wH = brushSize * 4;
         final int bufW = strokeBuffer.getWidth();
         final int bufH = strokeBuffer.getHeight();
@@ -127,12 +130,11 @@ public class ScraperItem extends Item implements IPaintProvider {
 
             @Override
             public Integer getPixel(double dx, double dy) {
-                // 三角形裁剪：底边在顶部(0)，顶点在底部(h)，逐行缩窄
-                double t = (dy / wH); // 0=顶边, 1=底边
-                double halfWidth = (1.0 - t) * wW / 2.0;
-                double cx = wW / 2.0;
-                if (dx < cx - halfWidth || dx > cx + halfWidth) return null;
-                if (t < 0 || t > 1) return null;
+                // 缩放坐标到 16×16 掩码
+                int mx = (int) (dx / wW * 16);
+                int my = (int) (dy / wH * 16);
+                if (mx < 0 || mx >= 16 || my < 0 || my >= 16) return null;
+                if (SCRAPER_MASK[my][mx] == 0) return null;
 
                 int bx = (int) (dx / wW * bufW);
                 int by = (int) (dy / wH * bufH);

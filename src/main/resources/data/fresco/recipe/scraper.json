@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "N  ",
+    "IS ",
+    " WP"
+  ],
+  "key": {
+    "N": { "item": "minecraft:iron_nugget" },
+    "I": { "item": "minecraft:iron_ingot" },
+    "S": { "item": "minecraft:stick" },
+    "W": { "item": "minecraft:stick" },
+    "P": { "tag": "minecraft:planks" }
+  },
+  "result": {
+    "id": "fresco:scraper",
+    "count": 1
+  }
+}
