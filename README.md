@@ -1,6 +1,6 @@
 # Fresco
 
-A NeoForge content mod for Minecraft 1.21.1, built on top of the [Painter](https://github.com/Steve10086/neoforge_pigmentum) canvas API. Fresco adds a set of brush-like tools — paintbrushes, stamps, spray cans, and cloths — that let players paint, copy, spray, and blend pixels on any block surface.
+A NeoForge content mod for Minecraft 1.21.1, built on top of the [Painter](https://github.com/Steve10086/neoforge_pigmentum) canvas API. Fresco adds a set of brush-like tools — paintbrushes, stamps, spray cans, cloths, erasers, and scrapers — that let players paint, copy, spray, erase, and blend pixels on any block surface.
 
 ## Requirements
 
@@ -61,11 +61,29 @@ Shift + right-click a block to store pixels. The stored face is preserved (non-d
 ---
 
 ### Cloth
-A blending tool that reads surrounding canvas pixels, computes a blurred composite matrix, and paints the averaged result back. As you paint, the cloth accumulates tint from the canvas pixels (1% blend weight per stroke, up to 100% saturation). The accumulated tint is injected back into the blurred output, creating a color-mixing effect.
-
-Shift + right-click on air resets the tint. Shift + right-click on a block opens the config screen (size, opacity, feather). The cloth texture changes based on saturation level (clean → cloth_30 → cloth_60 → cloth_dirty).
+A blending cloth — like smudging charcoal on paper. Drag it over painted canvas to soften edges and blend adjacent colors together. 
+As you use it, the cloth picks up a bit of every color it touches, gradually staining itself. The more stained it gets, the more it tints everything you blend. 
+Shift + right-click to open the config screen (size, opacity, feather, reset tint).
 
 > **Recipe:** white wool×3 → Cloth
+
+---
+
+### Eraser
+Erases paint — like a real eraser, but for your canvas. Right-click and drag over painted areas to fade them out. The pixels keep their color, only becoming more and more transparent with each pass. Works as a circular brush with adjustable size, strength, and edge softness.
+
+Shift + right-click to open the config screen (size, opacity, feather).
+
+> **Recipes:** bread + paper → Eraser, or leather + paper → Eraser
+
+---
+
+### Scraper
+A painter's palette knife. Picks up color from your offhand and lays it down in a triangular stroke. As you drag over already-painted areas, the knife picks up the underlying color — like smearing wet paint on a real canvas. The harder you press (higher thickness), the less the knife's own color is affected by what's underneath.
+
+Shift + right-click opens the config screen where you can adjust blade size, thickness (how easily it picks up color), and lock the triangle's angle as you paint.
+
+> **Recipe:** iron nugget + iron ingot + stick×2 + planks → Scraper
 
 ---
 
