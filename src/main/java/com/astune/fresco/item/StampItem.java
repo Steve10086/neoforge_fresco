@@ -21,24 +21,23 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
 
-public class StampItem extends Item implements IPaintProvider {
+public class StampItem extends Item implements IPaintProvider, OnRightClickHandler {
 
     public StampItem() {
         super(new Item.Properties().stacksTo(1));
@@ -74,25 +73,25 @@ public class StampItem extends Item implements IPaintProvider {
     // ── Shift+右键方块：提取 ──────────────────────────────────────
 
     @Override
-    public InteractionResult useOn(UseOnContext ctx) {
-        Player player = ctx.getPlayer();
-        if (player == null || !player.isShiftKeyDown()) return InteractionResult.PASS;
+    public void onRightClickedBlock(PlayerInteractEvent.RightClickBlock ctx){
+        Player player = ctx.getEntity();
+        if (!player.isShiftKeyDown()) return;
 
         Level level = ctx.getLevel();
-        BlockPos pos = ctx.getClickedPos();
-        ItemStack stack = ctx.getItemInHand();
+        BlockPos pos = ctx.getPos();
+        ItemStack stack = ctx.getItemStack();
         int slot = player.getMainHandItem().getItem().equals(this)
                 ? player.getInventory().selected : 40;
         boolean bgMode = stack.getOrDefault(Fresco.STAMP_BACKGROUND.get(), false);
-        Direction face = ctx.getClickedFace();
+        Direction face = ctx.getHitVec().getDirection();
 
         if (level.isClientSide() && bgMode) {
             captureBackgroundMode(level, pos, face, stack, slot);
         } else if (!level.isClientSide() && !bgMode) {
-            captureDefaultMode(level, pos, ctx.getClickLocation(), stack, player);
+            captureDefaultMode(level, pos, ctx.getHitVec().getLocation(), stack, player);
         }
-        return InteractionResult.SUCCESS;
     }
+
 
     // ── 默认模式：服务端复制 CanvasFace ───────────────────────────
 

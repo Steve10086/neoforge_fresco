@@ -1,5 +1,6 @@
 package com.astune.fresco;
 
+import com.astune.fresco.item.OnRightClickHandler;
 import com.astune.painter.api.IPaintProvider;
 import com.astune.painter.api.render.CanvasRendererRegistry;
 import com.astune.fresco.glow.GlowPixelRenderer;
@@ -77,6 +78,9 @@ public class FrescoClient {
     public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
         ItemStack stack = event.getItemStack();
         if (stack.getItem() instanceof IPaintProvider) {
+            if(stack.getItem() instanceof OnRightClickHandler handler){
+                handler.onRightClickedBlock(event);
+            }
             // 取消对原方块的交互，只让画笔处理
             event.setCancellationResult(InteractionResult.SUCCESS);
             event.setCanceled(true);
