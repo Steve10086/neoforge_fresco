@@ -6,8 +6,10 @@ import com.astune.painter.api.render.RenderContext;
 import com.astune.fresco.Fresco;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.datafixers.util.Pair;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
@@ -34,7 +36,7 @@ import java.util.Random;
 @EventBusSubscriber(modid = Fresco.MODID, value = Dist.CLIENT)
 public class GlowPixelRenderer implements CanvasPixelRenderer {
 
-    private static final Map<CanvasFace, Integer> LIGHT_MAP = new HashMap<>();
+    private static final Map<Pair<BlockPos, Vec3>, Integer> LIGHT_MAP = new HashMap<>();
     private static int globalTick = 0;
 
     @Override
@@ -48,7 +50,8 @@ public class GlowPixelRenderer implements CanvasPixelRenderer {
         CanvasFace face = context.face;
         ResourceLocation texture = context.texture;
         if (texture == null) return false;
-        if (!LIGHT_MAP.containsKey(face)) LIGHT_MAP.put(face, RandomSource.create().nextInt());
+        Pair<BlockPos, Vec3> key = new Pair<>(context.pos, face.corner0());
+        if (!LIGHT_MAP.containsKey(key)) LIGHT_MAP.put(key, RandomSource.create().nextInt());
 
         Vec3[] corners = face.cornerWithOffset(context.offset);
 
@@ -60,7 +63,7 @@ public class GlowPixelRenderer implements CanvasPixelRenderer {
         float nz = normal.getZ();
 
         // 自身亮度：用 cos 在 0~2 之间振荡，然后转为 0~1 factor
-        int faceTick = LIGHT_MAP.get(face);
+        int faceTick = LIGHT_MAP.get(key);
         float factor = (float) (1.0 + Math.cos((faceTick + globalTick) * Math.PI / 50)) / 2.0f;
         int selfBlock = Math.round(15 * factor);
         int selfSky   = Math.round(15 * factor);
