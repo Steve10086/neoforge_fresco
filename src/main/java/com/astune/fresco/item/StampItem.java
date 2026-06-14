@@ -29,6 +29,7 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
@@ -65,9 +66,21 @@ public class StampItem extends Item implements IPaintProvider, OnRightClickHandl
         return InteractionResultHolder.pass(stack);
     }
 
+    private static Vec3 lastHitLoc = null;
+
     @Override
-    public boolean shouldPaint(Player player){
-        return player.level().isClientSide && !player.isShiftKeyDown() && Minecraft.getInstance().options.keyUse.isDown();
+    public boolean shouldPaint(Player player, BlockHitResult result){
+        if (!(player.level().isClientSide && !player.isShiftKeyDown() && Minecraft.getInstance().options.keyUse.isDown())) return false;
+        if (lastHitLoc == null) {
+            lastHitLoc = result.getLocation();
+            return true;
+        }
+        if (lastHitLoc.distanceTo(result.getLocation()) > getStep()){
+            lastHitLoc = result.getLocation();
+            return true;
+        }
+
+        return false;
     }
 
     // ── Shift+右键方块：提取 ──────────────────────────────────────
@@ -105,7 +118,7 @@ public class StampItem extends Item implements IPaintProvider, OnRightClickHandl
         if (faces.isEmpty()) return;
         CanvasFace src = faces.get(0);
         if (src.pixels().isEmpty()) return;
-        stack.set(Fresco.STAMP_FACE.get(), clonePixelsOnly(src));
+        stack.set(Fresco.STAMP_FACE.get(), clonePixelsOnly(src, new PixelMatrix()));
         player.displayClientMessage(Component.translatable("item.fresco.stamp.stored"), true);
     }
 
@@ -137,9 +150,9 @@ public class StampItem extends Item implements IPaintProvider, OnRightClickHandl
                 var faces = data.getFaceAtHit(pos, probe);
                 if (!faces.isEmpty()) {
                     CanvasFace overlay = faces.get(0);
-                    if (!overlay.pixels().isEmpty()) {
-                        mergeAligned(matrix, overlay);
-                    }
+                    stack.set(Fresco.STAMP_FACE.get(), clonePixelsOnly(overlay, matrix));
+                    PacketDistributor.sendToServer(new ItemSyncPacket(slot, stack));
+                    return;
                 }
             }
         }
@@ -149,50 +162,6 @@ public class StampItem extends Item implements IPaintProvider, OnRightClickHandl
         PacketDistributor.sendToServer(new ItemSyncPacket(slot, stack));
     }
 
-    /** 将 overlay 的像素按角坐标对齐合并到 bg 矩阵中 */
-    private static void mergeAligned(PixelMatrix bg, CanvasFace overlay) {
-        // 构建块面坐标系 (u,v ∈ [0,1])：corner0=原点, corner1=u轴, corner3=v轴
-        Vec3 o = overlay.corner0();
-        Vec3 uAxis = overlay.corner1().subtract(o);
-        Vec3 vAxis = overlay.corner3().subtract(o);
-        double uLen = uAxis.length();
-        double vLen = vAxis.length();
-        if (uLen <= 0 || vLen <= 0) return;
-
-        // overlay 在块面上的归一化坐标范围
-        // ——简化：默认块面是 1×1，overlay 也是 1×1 时 uLen=vLen=1
-        double uMin = 0, vMin = 0, uMax = 1, vMax = 1;
-        // 角位置相对块面中心的偏移（块面始终 1×1）
-        // 这里不做复杂的 UV 反算，假设 overlay 角是标准全块面
-        // 实际对齐依赖 overlay.primaryFace() 和 face 的匹配
-
-        PixelMatrix overlayPx = overlay.pixels();
-        int ow = overlayPx.getWidth();
-        int oh = overlayPx.getHeight();
-        int bw = bg.getWidth();
-        int bh = bg.getHeight();
-
-        // overlay 角在块面空间的位置 → bg 像素范围
-        int x0 = (int)(uMin * bw);
-        int y0 = (int)(vMin * bh);
-        int x1 = (int)(uMax * bw);
-        int y1 = (int)(vMax * bh);
-
-        for (int py = y0; py < y1 && py < bh; py++) {
-            for (int px = x0; px < x1 && px < bw; px++) {
-                // bg 像素 → 反算 overlay UV
-                double u = (double)(px - x0) / (x1 - x0);
-                double v = (double)(py - y0) / (y1 - y0);
-                int ox = (int)(u * ow);
-                int oy = (int)(v * oh);
-                if (ox < 0 || ox >= ow || oy < 0 || oy >= oh) continue;
-                int c = overlayPx.getPixel(ox, oy);
-                if (((c >> 24) & 0xFF) > 0) {
-                    bg.setPixel(px, py, c);
-                }
-            }
-        }
-    }
 
     /** 从方块模型纹理中提取 PixelMatrix */
     @OnlyIn(Dist.CLIENT)
@@ -224,16 +193,64 @@ public class StampItem extends Item implements IPaintProvider, OnRightClickHandl
         return matrix;
     }
 
-    /** CanvasFace 仅拷贝像素（保留原有角坐标和方向） */
-    private static CanvasFace clonePixelsOnly(CanvasFace src) {
+    /** CanvasFace 仅拷贝像素（保留原有角坐标和方向），根据来源面方向做镜像使存储像素与 tangents 坐标系对齐 */
+    private static CanvasFace clonePixelsOnly(CanvasFace src, PixelMatrix dp) {
         PixelMatrix sp = src.pixels();
-        PixelMatrix dp = new PixelMatrix(sp.getWidth(), sp.getHeight());
+        int pw = sp.getWidth(), ph = sp.getHeight();
         int[] ps = sp.getPixels();
-        for (int i = 0; i < ps.length; i++) {
-            dp.setPixel(i % sp.getWidth(), i / sp.getWidth(), ps[i]);
+
+        Direction face = src.primaryFace();
+        boolean flipX = needFlipX(face);
+        boolean flipY = needFlipY(face);
+
+        for (int y = 0; y < ph; y++) {
+            for (int x = 0; x < pw; x++) {
+                int sx = flipX ? pw - 1 - x : x;
+                int sy = flipY ? ph - 1 - y : y;
+                if(ps[sy * pw + sx] != 0){
+                    int e = dp.getPixel(x, y);
+                    int n = ps[sy * pw + sx];
+                    int finalColor = getFinalColor(e, n);
+                    dp.setPixel(x, y, finalColor);
+                }
+            }
         }
         return new CanvasFace(src.primaryFace(), src.corner0(), src.corner1(),
                 src.corner2(), src.corner3(), dp, src.getEffectLayers());
+    }
+
+    private static int getFinalColor(int e, int n) {
+        int eA = e >> 24 & 255;
+        int eR = e >> 16 & 255;
+        int eG = e >> 8 & 255;
+        int eB = e & 255;
+        int nA = n >> 24 & 255;
+        int nR = n >> 16 & 255;
+        int nG = n >> 8 & 255;
+        int nB = n & 255;
+        float srcA = (float)nA / 255.0F;
+        float dstA = (float)eA / 255.0F;
+        float outA = srcA + dstA * (1.0F - srcA);
+
+        int outR = (int)(((float)nR * srcA + (float)eR * dstA * (1.0F - srcA)) / outA);
+        int outG = (int)(((float)nG * srcA + (float)eG * dstA * (1.0F - srcA)) / outA);
+        int outB = (int)(((float)nB * srcA + (float)eB * dstA * (1.0F - srcA)) / outA);
+        int outAInt = Math.min(255, (int)(outA * 255.0F));
+        return outAInt << 24 | outR << 16 | outG << 8 | outB;
+    }
+
+    private static boolean needFlipX(Direction face) {
+        return switch (face) {
+            case NORTH, WEST -> true;
+            default -> false;
+        };
+    }
+
+    private static boolean needFlipY(Direction face) {
+        return switch (face) {
+            case SOUTH, NORTH, DOWN, EAST, WEST -> true;
+            default -> false;
+        };
     }
 
     // ── IPaintProvider ──────────────────────────────────────────
@@ -263,7 +280,7 @@ public class StampItem extends Item implements IPaintProvider, OnRightClickHandl
 
         return new PaintPattern(faceW, faceH, new PixelProvider() {
             @Override
-            public BlendMode getBlendMode() { return BlendMode.OVERWRITE; }
+            public BlendMode getBlendMode() { return BlendMode.ADD; }
 
             @Override
             public Integer getPixel(double dx, double dy) {
@@ -296,7 +313,7 @@ public class StampItem extends Item implements IPaintProvider, OnRightClickHandl
     }
 
     @Override
-    public Double getStep() { return 100.0; }
+    public Double getStep() { return 0.02; }
 
     // ── Tooltip ──────────────────────────────────────────────────
 
