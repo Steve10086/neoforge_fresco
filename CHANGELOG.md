@@ -1,4 +1,6 @@
 # Changelog
 
 <!-- Add changes for the next release here -->
-Fix stampItem behaviour
+Fix incorrect render offset
+
+Add dynamic light effect to glow effector

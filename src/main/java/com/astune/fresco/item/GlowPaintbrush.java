@@ -1,5 +1,6 @@
 package com.astune.fresco.item;
 
+import com.astune.fresco.glow.GlowImageProvider;
 import com.astune.painter.api.blend.BlendContext;
 import com.astune.painter.api.blend.BlendFunction;
 import com.astune.painter.api.BlendMode;
@@ -37,7 +38,7 @@ public class GlowPaintbrush extends CustomPaintbrush {
                 boolean changed = mode.getDefaultFunction().apply(ctx);
 
                 // 2. 写入 glow 效果层（固定值 255 = 全亮）
-                ctx.setEffect("glow", 255);
+                ctx.setEffect("fresco/glow", 255);
                 //System.out.println(ctx);
 
                 return changed;

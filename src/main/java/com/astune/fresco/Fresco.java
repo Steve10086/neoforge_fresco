@@ -270,7 +270,7 @@ public class Fresco {
 
     private void commonSetup(FMLCommonSetupEvent event) {
         // Register glow image provider for the night-glow pipeline
-        CanvasImageProviderRegistry.register(new GlowImageProvider(), 1);
+        CanvasImageProviderRegistry.register(new GlowImageProvider(), 2);
         LOGGER.info("GlowImageProvider registered");
     }
 

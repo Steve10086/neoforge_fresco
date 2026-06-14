@@ -16,18 +16,18 @@ public class GlowImageProvider implements CanvasImageProvider {
 
     @Override
     public String name() {
-        return "glow";
+        return "fresco/glow";
     }
 
     @Override
     public boolean canProvide(ImageProviderContext context) {
-        return context.face != null && context.face.getEffectLayer("glow") != null;
+        return context.face != null && context.face.getEffectLayer(name()) != null;
     }
 
     @Override
     public NativeImage createImage(CanvasFace face) {
         //System.out.println("glow image");
-        byte[] glowLayer = face.getEffectLayer("glow");
+        byte[] glowLayer = face.getEffectLayer(name());
         if (glowLayer == null) return null;
 
         PixelMatrix matrix = face.pixels();
