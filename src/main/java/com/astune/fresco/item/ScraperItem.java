@@ -12,6 +12,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
@@ -78,6 +79,8 @@ public class ScraperItem extends Item implements IPaintProvider {
     private static Vec3 lastHitLoc = null;
     private static PixelMatrix strokeBuffer = null;
     private static Vec3[] lockedAxes = null;
+
+    private final static RandomSource random = RandomSource.create();
     // 用于 BlendFunction 传递当前映射到的 buffer 位置
     private static int currentBufX = 0, currentBufY = 0;
 
@@ -156,16 +159,17 @@ public class ScraperItem extends Item implements IPaintProvider {
         return ctx -> {
             int newColor = ctx.newColor;
             int existing = ctx.existingColor;
-            if (newColor == 0) return false;
 
             // 写 buffer 颜色到画布
             ctx.face.pixels().setPixel(ctx.px, ctx.py, newColor);
+
+            if (newColor == 0 || existing == 0) return false;
 
             // 厚度决定吸收程度
             if (thickness > 0.8f || strokeBuffer == null) return true;
 
             float existingAlpha = ((existing >> 24) & 0xFF) / 255.0f;
-            float factor = existingAlpha * thickness;
+            float factor = (1 - existingAlpha * thickness) * random.nextFloat();
 
             int bufColor = strokeBuffer.getPixel(currentBufX, currentBufY);
             int bufR = (bufColor >> 16) & 0xFF;

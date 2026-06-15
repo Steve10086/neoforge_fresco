@@ -118,7 +118,7 @@ public class StampItem extends Item implements IPaintProvider, OnRightClickHandl
         if (faces.isEmpty()) return;
         CanvasFace src = faces.get(0);
         if (src.pixels().isEmpty()) return;
-        stack.set(Fresco.STAMP_FACE.get(), clonePixelsOnly(src, new PixelMatrix()));
+        stack.set(Fresco.STAMP_FACE.get(), clonePixelsOnly(src, new PixelMatrix(src.pixels().getWidth(), src.pixels().getHeight())));
         player.displayClientMessage(Component.translatable("item.fresco.stamp.stored"), true);
     }
 
@@ -197,6 +197,7 @@ public class StampItem extends Item implements IPaintProvider, OnRightClickHandl
     private static CanvasFace clonePixelsOnly(CanvasFace src, PixelMatrix dp) {
         PixelMatrix sp = src.pixels();
         int pw = sp.getWidth(), ph = sp.getHeight();
+        PixelMatrix rp = new PixelMatrix(pw, ph);
         int[] ps = sp.getPixels();
 
         Direction face = src.primaryFace();
@@ -207,16 +208,19 @@ public class StampItem extends Item implements IPaintProvider, OnRightClickHandl
             for (int x = 0; x < pw; x++) {
                 int sx = flipX ? pw - 1 - x : x;
                 int sy = flipY ? ph - 1 - y : y;
+                if (sx > 0 && sx < dp.getWidth() && sy > 0 && sy < dp.getHeight()) {
+                    rp.setPixel(sx, sy, dp.getPixel(sx, sy));
+                }
                 if(ps[sy * pw + sx] != 0){
                     int e = dp.getPixel(x, y);
                     int n = ps[sy * pw + sx];
                     int finalColor = getFinalColor(e, n);
-                    dp.setPixel(x, y, finalColor);
+                    rp.setPixel(x, y, finalColor);
                 }
             }
         }
         return new CanvasFace(src.primaryFace(), src.corner0(), src.corner1(),
-                src.corner2(), src.corner3(), dp, src.getEffectLayers());
+                src.corner2(), src.corner3(), rp, src.getEffectLayers());
     }
 
     private static int getFinalColor(int e, int n) {
