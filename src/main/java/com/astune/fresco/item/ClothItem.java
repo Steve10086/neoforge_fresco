@@ -1,5 +1,6 @@
 package com.astune.fresco.item;
 
+import com.astune.fresco.client.BrushParticleSpawner;
 import com.astune.painter.api.*;
 import com.astune.painter.network.ItemSyncPacket;
 import com.astune.painter.registry.ModAttachments;
@@ -60,14 +61,45 @@ public class ClothItem extends Item implements IPaintProvider {
                 && net.minecraft.client.Minecraft.getInstance().options.keyUse.isDown())) return false;
         if (lastHitLoc == null) {
             lastHitLoc = result.getLocation();
+            spawnClothParticle(player, result);
             return true;
         }
         if (lastHitLoc.distanceTo(result.getLocation()) > getStep()){
             lastHitLoc = result.getLocation();
+            spawnClothParticle(player, result);
             return true;
         }
 
         return false;
+    }
+
+    private void spawnClothParticle(Player player, BlockHitResult result) {
+        double size = player.getMainHandItem().getOrDefault(ModDataComponents.BRUSH_SIZE.get(), 0.12);
+        // ponytail: sample canvas pixel at hit — null if no canvas, skip particle cheaply
+        int color = sampleCanvasColor(player.level(), result.getBlockPos(), result.getLocation());
+        BrushParticleSpawner.trySpawn(player.level(), result.getLocation(), color, size, player.level().random);
+    }
+
+    /** Quick single-pixel sample from canvas at hit UV; returns white if absent. */
+    private static int sampleCanvasColor(Level level, BlockPos pos, Vec3 hit) {
+        BlockEntity be = level.getBlockEntity(pos);
+        if (be == null) return 0xFFFFFFFF;
+        CanvasData data = be.getExistingData(ModAttachments.CANVAS_DATA.get()).orElse(null);
+        if (data == null) return 0xFFFFFFFF;
+        var faces = data.getFaceAtHit(pos, hit);
+        if (faces.isEmpty()) return 0xFFFFFFFF;
+        CanvasFace face = faces.get(0);
+        PixelMatrix m = face.pixels();
+        if (m.isEmpty()) return 0xFFFFFFFF;
+
+        Vec3[] axes = tangents(face.primaryFace());
+        Vec3 rel = hit.subtract(Vec3.atLowerCornerOf(pos));
+        double u = rel.dot(axes[0]), v = rel.dot(axes[1]);
+        int px = (int)(u * m.getWidth());
+        int py = (int)(v * m.getHeight());
+        if (px < 0 || px >= m.getWidth() || py < 0 || py >= m.getHeight()) return 0xFFFFFFFF;
+        int c = m.getPixel(px, py);
+        return ((c >> 24) & 0xFF) == 0 ? 0xFFFFFFFF : c;
     }
 
     private static Vec3[] tangents(Direction face) {

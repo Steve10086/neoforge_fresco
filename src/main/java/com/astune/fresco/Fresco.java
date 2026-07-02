@@ -16,6 +16,7 @@ import com.astune.fresco.network.SyncItemStackPayload;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -57,6 +58,8 @@ public class Fresco {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
     // Create a Deferred Register to hold DataComponentTypes
     public static final DeferredRegister<DataComponentType<?>> DATA_COMPONENTS = DeferredRegister.create(Registries.DATA_COMPONENT_TYPE, MODID);
+    // Create a Deferred Register to hold ParticleTypes
+    public static final DeferredRegister<ParticleType<?>> PARTICLE_TYPES = DeferredRegister.create(Registries.PARTICLE_TYPE, MODID);
 
     // ---- Data Components ----
 
@@ -144,6 +147,21 @@ public class Fresco {
     // ---- Blocks ----
 
 
+    // ---- Particles ----
+
+    public static final DeferredHolder<ParticleType<?>, ParticleType<ColoredSquareParticleOptions>> COLORED_SQUARE_PARTICLE =
+            PARTICLE_TYPES.register("colored_square", () -> new ParticleType<>(false) {
+                @Override
+                public com.mojang.serialization.MapCodec<ColoredSquareParticleOptions> codec() {
+                    return ColoredSquareParticleOptions.CODEC;
+                }
+
+                @Override
+                public net.minecraft.network.codec.StreamCodec<? super net.minecraft.network.RegistryFriendlyByteBuf, ColoredSquareParticleOptions> streamCodec() {
+                    return ColoredSquareParticleOptions.streamCodec(this);
+                }
+            });
+
     // ---- Items ----
 
     /** Palette - right-click to pick the color under the crosshair. */
@@ -202,6 +220,8 @@ public class Fresco {
         CREATIVE_MODE_TABS.register(modEventBus);
         // Register the Deferred Register to the mod event bus so data components get registered
         DATA_COMPONENTS.register(modEventBus);
+        // Register the Deferred Register to the mod event bus so particle types get registered
+        PARTICLE_TYPES.register(modEventBus);
 
         // Register networking payloads
         modEventBus.addListener(this::registerNetworking);

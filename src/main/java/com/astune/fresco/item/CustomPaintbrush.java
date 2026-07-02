@@ -1,5 +1,6 @@
 package com.astune.fresco.item;
 
+import com.astune.fresco.client.BrushParticleSpawner;
 import com.astune.fresco.screen.PaintbrushScreen;
 
 import com.astune.painter.api.BlendMode;
@@ -81,14 +82,22 @@ public class CustomPaintbrush extends Item implements IPaintProvider {
                 && net.minecraft.client.Minecraft.getInstance().options.keyUse.isDown())) return false;
         if (lastHitLoc == null) {
             lastHitLoc = result.getLocation();
+            spawnParticle(player, result);
             return true;
         }
         if (lastHitLoc.distanceTo(result.getLocation()) > getStep()){
             lastHitLoc = result.getLocation();
+            spawnParticle(player, result);
             return true;
         }
 
         return false;
+    }
+
+    private void spawnParticle(Player player, BlockHitResult result) {
+        double size = player.getMainHandItem().getOrDefault(ModDataComponents.BRUSH_SIZE.get(), 0.06);
+        int color = OffhandColorResolver.resolve(player);
+        BrushParticleSpawner.trySpawn(player.level(), result.getLocation(), color, size, player.level().random);
     }
 
     // ── 右键打开配置屏幕 ─────────────────────────────────────────

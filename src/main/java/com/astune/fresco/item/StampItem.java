@@ -1,5 +1,6 @@
 package com.astune.fresco.item;
 
+import com.astune.fresco.client.BrushParticleSpawner;
 import com.astune.painter.api.BlendMode;
 import com.astune.painter.api.CanvasData;
 import com.astune.painter.api.CanvasFace;
@@ -73,14 +74,44 @@ public class StampItem extends Item implements IPaintProvider, OnRightClickHandl
         if (!(player.level().isClientSide && !player.isShiftKeyDown() && Minecraft.getInstance().options.keyUse.isDown())) return false;
         if (lastHitLoc == null) {
             lastHitLoc = result.getLocation();
+            spawnStampParticles(player, result);
             return true;
         }
         if (lastHitLoc.distanceTo(result.getLocation()) > getStep()){
             lastHitLoc = result.getLocation();
+            spawnStampParticles(player, result);
             return true;
         }
 
         return false;
+    }
+
+    private void spawnStampParticles(Player player, BlockHitResult result) {
+        CanvasFace stampFace = player.getMainHandItem().getOrDefault(Fresco.STAMP_FACE.get(), null);
+        if (stampFace == null) return;
+        PixelMatrix matrix = stampFace.pixels();
+        if (matrix.isEmpty()) return;
+
+        double faceW = stampFace.corner0().distanceTo(stampFace.corner1());
+        double faceH = stampFace.corner0().distanceTo(stampFace.corner3());
+        if (faceW <= 0 || faceH <= 0) return;
+
+        int pw = matrix.getWidth(), ph = matrix.getHeight();
+        Direction face = result.getDirection();
+        Vec3[] axes = tangents(face);
+        Vec3 origin = result.getLocation().subtract(axes[0].scale(faceW / 2)).subtract(axes[1].scale(faceH / 2));
+        int[] pixels = matrix.getPixels();
+
+        for (int i = 0; i < 10; i++) {
+            int px = player.level().random.nextInt(pw);
+            int py = player.level().random.nextInt(ph);
+            int color = pixels[py * pw + px];
+            if (((color >> 24) & 0xFF) == 0) continue;
+            double dx = (px + 0.5) / pw * faceW;
+            double dy = (py + 0.5) / ph * faceH;
+            Vec3 pos = origin.add(axes[0].scale(dx)).add(axes[1].scale(dy));
+            BrushParticleSpawner.spawn(player.level(), pos, color);
+        }
     }
 
     // ── Shift+右键方块：提取 ──────────────────────────────────────

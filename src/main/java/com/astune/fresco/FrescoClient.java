@@ -1,5 +1,6 @@
 package com.astune.fresco;
 
+import com.astune.fresco.client.ColoredSquareParticle;
 import com.astune.fresco.item.OnRightClickHandler;
 import com.astune.painter.api.IPaintProvider;
 import com.astune.painter.api.render.CanvasRendererRegistry;
@@ -26,6 +27,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
+import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
 import net.neoforged.neoforge.client.event.RenderTooltipEvent;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
@@ -37,6 +39,14 @@ public class FrescoClient {
     public FrescoClient(ModContainer container, IEventBus modBus) {
         container.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
         modBus.addListener(this::onRegisterTooltipComponents);
+        modBus.addListener(this::onRegisterParticleProviders);
+    }
+
+    private void onRegisterParticleProviders(RegisterParticleProvidersEvent event) {
+        event.registerSpriteSet(
+                Fresco.COLORED_SQUARE_PARTICLE.get(),
+                sprites -> (options, level, x, y, z, vx, vy, vz) ->
+                        new ColoredSquareParticle(level, x, y, z, (ColoredSquareParticleOptions) options, sprites));
     }
 
     private void onRegisterTooltipComponents(RegisterClientTooltipComponentFactoriesEvent event) {
