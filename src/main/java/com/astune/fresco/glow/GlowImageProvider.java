@@ -27,7 +27,7 @@ public class GlowImageProvider implements CanvasImageProvider {
     @Override
     public NativeImage createImage(CanvasFace face) {
         //System.out.println("glow image");
-        byte[] glowLayer = face.getEffectLayer(name());
+        int[] glowLayer = face.getEffectLayer(name());
         if (glowLayer == null) return null;
 
         PixelMatrix matrix = face.pixels();
@@ -45,7 +45,7 @@ public class GlowImageProvider implements CanvasImageProvider {
         try {
             for (int y = 0; y < h; y++) {
                 for (int x = 0; x < w; x++) {
-                    if (glowLayer[y * w + x] == (byte)255){
+                    if (glowLayer[y * w + x] >= 255){
                         int argb = matrix.getPixel(x, y);
                         int a = (argb >> 24) & 0xFF;
                         int r = (argb >> 16) & 0xFF;
