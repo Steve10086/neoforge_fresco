@@ -58,6 +58,12 @@
   "fresco.cloth_screen.feather": "羽化",
   "fresco.cloth_screen.clean": "清洗",
 
+  "fresco.palette_screen.title": "调色板",
+  "fresco.palette_screen.color": "颜色",
+  "fresco.palette_screen.hue": "色相",
+  "fresco.palette_screen.brightness": "亮度",
+  "fresco.palette_screen.hex": "十六进制",
+
   "fresco.eraser_screen.title": "橡皮设置",
   "fresco.eraser_screen.size": "大小",
   "fresco.eraser_screen.opacity": "不透明度",

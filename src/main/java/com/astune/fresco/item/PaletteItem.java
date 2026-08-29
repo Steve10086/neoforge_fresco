@@ -2,6 +2,7 @@ package com.astune.fresco.item;
 
 import com.astune.fresco.Fresco;
 import com.astune.fresco.network.SetPaletteColorPayload;
+import com.astune.fresco.screen.PaletteScreen;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.component.DataComponents;
@@ -9,8 +10,14 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -34,6 +41,37 @@ public class PaletteItem extends Item {
         super(new Item.Properties().stacksTo(1));
     }
 
+    @Override
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        if (level.isClientSide() && player.isShiftKeyDown()) {
+            openPaletteScreen(stack, slotFor(player, hand));
+            return InteractionResultHolder.success(stack);
+        }
+        return InteractionResultHolder.pass(stack);
+    }
+
+    @Override
+    public InteractionResult useOn(UseOnContext context) {
+        Player player = context.getPlayer();
+        if (player != null && player.isShiftKeyDown()) {
+            if (context.getLevel().isClientSide()) {
+                openPaletteScreen(context.getItemInHand(), slotFor(player, context.getHand()));
+            }
+            return InteractionResult.sidedSuccess(context.getLevel().isClientSide());
+        }
+        return super.useOn(context);
+    }
+
+    private static int slotFor(Player player, InteractionHand hand) {
+        return hand == InteractionHand.MAIN_HAND ? player.getInventory().selected : 40;
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    private static void openPaletteScreen(ItemStack stack, int slot) {
+        Minecraft.getInstance().setScreen(new PaletteScreen(stack, slot));
+    }
+
     @OnlyIn(Dist.CLIENT)
     private static void pickColorClient(ItemStack stack) {
         Minecraft mc = Minecraft.getInstance();
@@ -50,10 +88,6 @@ public class PaletteItem extends Item {
         if (color != 0) {
             setCurrentColor(stack, color);
             String hex = String.format("#%06X", color & 0x00FFFFFF);
-            Component name = Component.translatable(stack.getItem().getDescriptionId())
-                    .append(Component.literal(" (#" + hex + ")"))
-                    .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(color & 0x00FFFFFF)));
-            stack.set(DataComponents.CUSTOM_NAME, name);
 
             if (mc.player != null) {
                 Component message = Component.literal("Picked color: " + hex)
@@ -68,6 +102,17 @@ public class PaletteItem extends Item {
      */
     public static void setCurrentColor(ItemStack stack, int color) {
         stack.set(Fresco.PALETTE_COLOR.get(), color);
+        updateDisplayName(stack);
+    }
+
+    /** Keeps the item name and its stored color in sync for every color editing path. */
+    public static void updateDisplayName(ItemStack stack) {
+        int color = getCurrentColor(stack);
+        String hex = String.format("#%06X", color & 0x00FFFFFF);
+        Component name = Component.translatable(stack.getItem().getDescriptionId())
+                .append(Component.literal(" (" + hex + ")"))
+                .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(color & 0x00FFFFFF)));
+        stack.set(DataComponents.CUSTOM_NAME, name);
     }
 
     /**

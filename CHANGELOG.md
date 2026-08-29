@@ -1,3 +1,3 @@
 # Changelog
 
-<!-- Add changes for the next release here -->
+add color selector for palette item, Shift + right click to open.

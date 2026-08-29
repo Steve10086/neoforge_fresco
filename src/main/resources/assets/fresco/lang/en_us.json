@@ -58,6 +58,12 @@
   "fresco.cloth_screen.feather": "Feather",
   "fresco.cloth_screen.clean": "Clean",
 
+  "fresco.palette_screen.title": "Palette",
+  "fresco.palette_screen.color": "Color",
+  "fresco.palette_screen.hue": "Hue",
+  "fresco.palette_screen.brightness": "Brightness",
+  "fresco.palette_screen.hex": "Hex",
+
   "fresco.eraser_screen.title": "Eraser Config",
   "fresco.eraser_screen.size": "Size",
   "fresco.eraser_screen.opacity": "Opacity",

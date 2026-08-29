@@ -15,13 +15,10 @@ import com.astune.fresco.network.SetPaletteColorPayload;
 import com.astune.fresco.network.SyncItemStackPayload;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.component.DataComponentType;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
-import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.codec.ByteBufCodecs;
 import com.mojang.serialization.Codec;
 import net.minecraft.world.item.CreativeModeTab;
@@ -158,7 +155,7 @@ public class Fresco {
 
                 @Override
                 public net.minecraft.network.codec.StreamCodec<? super net.minecraft.network.RegistryFriendlyByteBuf, ColoredSquareParticleOptions> streamCodec() {
-                    return ColoredSquareParticleOptions.streamCodec(this);
+                    return ColoredSquareParticleOptions.streamCodec((ParticleType<ColoredSquareParticleOptions>) this);
                 }
             });
 
@@ -250,13 +247,7 @@ public class Fresco {
                     ItemStack stack = player.getOffhandItem();
                     if (stack.getItem() instanceof PaletteItem) {
                         int color = payload.color();
-                        int colorRgb = color & 0x00FFFFFF;
                         PaletteItem.setCurrentColor(stack, color);
-                        String hex = String.format("#%06X", colorRgb);
-                        Component name = Component.translatable(stack.getItem().getDescriptionId())
-                                .append(Component.literal(" (" + hex + ")"))
-                                .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(colorRgb)));
-                        stack.set(DataComponents.CUSTOM_NAME, name);
                     }
                 }
         );
@@ -274,6 +265,10 @@ public class Fresco {
                         ItemStack serverStack = player.getInventory().getItem(slot);
                         if (!ItemStack.isSameItem(serverStack, clientStack)) return;
                         serverStack.applyComponents(clientStack.getComponentsPatch());
+                        if (clientStack.getItem() instanceof PaletteItem) {
+                            PaletteItem.setCurrentColor(serverStack,
+                                    clientStack.getOrDefault(PALETTE_COLOR.get(), 0xFFFFFFFF));
+                        }
                         // ClothItem tint/sat may be filtered from patch if equal to default; copy explicitly
                         if (clientStack.getItem() instanceof com.astune.fresco.item.ClothItem) {
                             serverStack.set(CLOTH_TINT.get(), clientStack.getOrDefault(CLOTH_TINT.get(), 0));
