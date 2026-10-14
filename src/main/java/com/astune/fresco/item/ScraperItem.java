@@ -3,11 +3,9 @@ package com.astune.fresco.item;
 import com.astune.painter.api.*;
 import com.astune.painter.api.blend.BlendContext;
 import com.astune.painter.api.blend.BlendFunction;
-import com.astune.painter.network.ItemSyncPacket;
 import com.astune.painter.registry.ModDataComponents;
 import com.astune.fresco.Fresco;
-import com.astune.fresco.screen.ScraperScreen;
-import net.minecraft.client.Minecraft;
+import com.astune.fresco.ClientInputState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -22,12 +20,6 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 import static com.astune.fresco.item.ScraperPattern.SCRAPER_MASK;
 
@@ -80,6 +72,10 @@ public class ScraperItem extends Item implements IPaintProvider {
     private static PixelMatrix strokeBuffer = null;
     private static Vec3[] lockedAxes = null;
 
+    public static void resetStroke() {
+        lastHitLoc = null;
+    }
+
     private final static RandomSource random = RandomSource.create();
     // 用于 BlendFunction 传递当前映射到的 buffer 位置
     private static int currentBufX = 0, currentBufY = 0;
@@ -92,8 +88,7 @@ public class ScraperItem extends Item implements IPaintProvider {
     // ── 绘画条件 ──
     @Override
     public boolean shouldPaint(Player player, BlockHitResult result) {
-        if (!(player.level().isClientSide
-                && Minecraft.getInstance().options.keyUse.isDown())) return false;
+        if (!(player.level().isClientSide && ClientInputState.isUseKeyDown())) return false;
         if (lastHitLoc == null) {
             // ── 新笔画开始：初始化缓冲区 ──
             lastHitLoc = result.getLocation();
@@ -197,12 +192,6 @@ public class ScraperItem extends Item implements IPaintProvider {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        if (level.isClientSide() && player.isShiftKeyDown()) {
-            int slot = hand == InteractionHand.MAIN_HAND
-                    ? player.getInventory().selected
-                    : 40;
-            Minecraft.getInstance().setScreen(new ScraperScreen(stack, slot));
-        }
         return InteractionResultHolder.success(stack);
     }
 
@@ -221,23 +210,4 @@ public class ScraperItem extends Item implements IPaintProvider {
                 .withStyle(Style.EMPTY.withColor(0xAAAAAA)));
     }
 
-    @OnlyIn(Dist.CLIENT)
-    @EventBusSubscriber(modid = Fresco.MODID, value = Dist.CLIENT)
-    private static class MouseUpHandler {
-        private static boolean wasPressed = false;
-
-        @SubscribeEvent
-        public static void onClientTick(ClientTickEvent.Pre event) {
-            Minecraft mc = Minecraft.getInstance();
-            if (mc.player == null || mc.level == null) return;
-            if (!(mc.player.getMainHandItem().getItem() instanceof ScraperItem)) return;
-
-            if (mc.options.keyUse.isDown()) {
-                wasPressed = true;
-            } else if (wasPressed) {
-                wasPressed = false;
-                lastHitLoc = null;
-            }
-        }
-    }
 }

@@ -1,8 +1,6 @@
 package com.astune.fresco;
 
 import com.astune.painter.api.CanvasFace;
-import com.astune.painter.api.imageProvider.CanvasImageProviderRegistry;
-import com.astune.fresco.glow.GlowImageProvider;
 import com.astune.fresco.item.ClothItem;
 import com.astune.fresco.item.CustomPaintbrush;
 import com.astune.fresco.item.EraserItem;
@@ -11,29 +9,30 @@ import com.astune.fresco.item.ScraperItem;
 import com.astune.fresco.item.PaletteItem;
 import com.astune.fresco.item.SprayCanItem;
 import com.astune.fresco.item.StampItem;
+import com.astune.fresco.item.OnRightClickHandler;
 import com.astune.fresco.network.SetPaletteColorPayload;
 import com.astune.fresco.network.SyncItemStackPayload;
+import com.astune.painter.api.IPaintProvider;
 import com.mojang.logging.LogUtils;
+import com.mojang.serialization.Codec;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.particles.ParticleType;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
-import com.mojang.serialization.Codec;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Blocks;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
-import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -206,9 +205,6 @@ public class Fresco {
     // The constructor for the mod class is the first code that is run when your mod is loaded.
     // FML will recognize some parameter types like IEventBus or ModContainer and pass them in automatically.
     public Fresco(IEventBus modEventBus, ModContainer modContainer) {
-        // Register the commonSetup method for modloading
-        modEventBus.addListener(this::commonSetup);
-
         // Register the Deferred Register to the mod event bus so blocks get registered
         BLOCKS.register(modEventBus);
         // Register the Deferred Register to the mod event bus so items get registered
@@ -283,12 +279,6 @@ public class Fresco {
         );
     }
 
-    private void commonSetup(FMLCommonSetupEvent event) {
-        // Register glow image provider for the night-glow pipeline
-        CanvasImageProviderRegistry.register(new GlowImageProvider(), 2);
-        LOGGER.info("GlowImageProvider registered");
-    }
-
     // Add the example block item to the building blocks tab
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
 
@@ -299,5 +289,17 @@ public class Fresco {
     public void onServerStarting(ServerStartingEvent event) {
         // Do something when the server starts
         LOGGER.info("HELLO from server starting");
+    }
+
+    @SubscribeEvent
+    public void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+        if (event.getLevel().isClientSide()) return;
+
+        var item = event.getItemStack().getItem();
+        if (item instanceof OnRightClickHandler handler) handler.onRightClickedBlock(event);
+        if (item instanceof IPaintProvider) {
+            event.setCancellationResult(InteractionResult.SUCCESS);
+            event.setCanceled(true);
+        }
     }
 }

@@ -1,14 +1,13 @@
 package com.astune.fresco.item;
 
-import com.astune.fresco.client.BrushParticleSpawner;
-import com.astune.fresco.screen.PaintbrushScreen;
+import com.astune.fresco.particle.BrushParticleSpawner;
+import com.astune.fresco.ClientInputState;
 
 import com.astune.painter.api.BlendMode;
 import com.astune.painter.api.IPaintProvider;
 import com.astune.painter.api.PaintPattern;
 import com.astune.painter.api.PaintProviders;
 import com.astune.painter.registry.ModDataComponents;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.world.InteractionHand;
@@ -20,8 +19,6 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 /**
  * 自定义画笔 - 圆形 pattern，副手取色，附带参数调整屏幕。
@@ -78,8 +75,7 @@ public class CustomPaintbrush extends Item implements IPaintProvider {
 
     @Override
     public boolean shouldPaint(Player player, BlockHitResult result){
-        if (!(player.level().isClientSide
-                && net.minecraft.client.Minecraft.getInstance().options.keyUse.isDown())) return false;
+        if (!(player.level().isClientSide && ClientInputState.isUseKeyDown())) return false;
         if (lastHitLoc == null) {
             lastHitLoc = result.getLocation();
             spawnParticle(player, result);
@@ -105,18 +101,7 @@ public class CustomPaintbrush extends Item implements IPaintProvider {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        if (level.isClientSide() && player.isShiftKeyDown()) {
-            int slot = hand == InteractionHand.MAIN_HAND
-                    ? player.getInventory().selected
-                    : 40; // offhand slot
-            openConfigScreen(stack, slot);
-        }
         return InteractionResultHolder.success(stack);
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    private void openConfigScreen(ItemStack stack, int slot) {
-        Minecraft.getInstance().setScreen(new PaintbrushScreen(stack, slot));
     }
 
     // ── Tooltip ──────────────────────────────────────────────────

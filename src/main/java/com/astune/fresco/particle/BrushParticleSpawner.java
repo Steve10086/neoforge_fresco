@@ -1,7 +1,6 @@
-package com.astune.fresco.client;
+package com.astune.fresco.particle;
 
 import com.astune.fresco.ColoredSquareParticleOptions;
-import com.astune.fresco.Fresco;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;

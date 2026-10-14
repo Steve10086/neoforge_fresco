@@ -1,6 +1,5 @@
 package com.astune.fresco.item;
 
-import com.astune.fresco.glow.GlowImageProvider;
 import com.astune.painter.api.blend.BlendContext;
 import com.astune.painter.api.blend.BlendFunction;
 import com.astune.painter.api.BlendMode;

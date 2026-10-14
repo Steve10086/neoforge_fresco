@@ -6,8 +6,7 @@ import com.astune.painter.api.blend.BlendFunction;
 import com.astune.painter.network.ItemSyncPacket;
 import com.astune.painter.registry.ModDataComponents;
 import com.astune.fresco.Fresco;
-import com.astune.fresco.screen.EraserScreen;
-import net.minecraft.client.Minecraft;
+import com.astune.fresco.ClientInputState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -21,12 +20,6 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 public class EraserItem extends Item implements IPaintProvider {
 
@@ -76,8 +69,7 @@ public class EraserItem extends Item implements IPaintProvider {
 
     @Override
     public boolean shouldPaint(Player player, BlockHitResult result) {
-        if (!(player.level().isClientSide
-                && Minecraft.getInstance().options.keyUse.isDown())) return false;
+        if (!(player.level().isClientSide && ClientInputState.isUseKeyDown())) return false;
         if (lastHitLoc == null) {
             lastHitLoc = result.getLocation();
             return true;
@@ -155,12 +147,6 @@ public class EraserItem extends Item implements IPaintProvider {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        if (level.isClientSide() && player.isShiftKeyDown()) {
-            int slot = hand == InteractionHand.MAIN_HAND
-                    ? player.getInventory().selected
-                    : 40;
-            Minecraft.getInstance().setScreen(new EraserScreen(stack, slot));
-        }
         return InteractionResultHolder.success(stack);
     }
 

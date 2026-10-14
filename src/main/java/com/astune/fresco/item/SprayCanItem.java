@@ -6,8 +6,6 @@ import com.astune.painter.api.PaintPattern;
 import com.astune.painter.api.PaintProviders;
 import com.astune.painter.registry.ModDataComponents;
 import com.astune.fresco.Fresco;
-import com.astune.fresco.screen.SprayCanScreen;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -25,8 +23,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.Level;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.List;
 
@@ -82,19 +78,9 @@ public class SprayCanItem extends Item implements IPaintProvider {
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         if (player.isShiftKeyDown()) {
-            if (level.isClientSide()) {
-                int slot = hand == InteractionHand.MAIN_HAND
-                        ? player.getInventory().selected : 40;
-                openConfigScreen(stack, slot);
-            }
             return InteractionResultHolder.success(stack);
         }
         return InteractionResultHolder.pass(stack);
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    private void openConfigScreen(ItemStack stack, int slot) {
-        Minecraft.getInstance().setScreen(new SprayCanScreen(stack, slot));
     }
 
     // ── 库存内右键存取染料（类似束口袋）──────────────────────────

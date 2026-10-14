@@ -1,6 +1,6 @@
 package com.astune.fresco.item;
 
-import com.astune.fresco.client.BrushParticleSpawner;
+import com.astune.fresco.particle.BrushParticleSpawner;
 import com.astune.painter.api.BlendMode;
 import com.astune.painter.api.CanvasData;
 import com.astune.painter.api.CanvasFace;
@@ -9,18 +9,12 @@ import com.astune.painter.api.PaintPattern;
 import com.astune.painter.api.PaintProviders;
 import com.astune.painter.api.PixelMatrix;
 import com.astune.painter.api.PixelProvider;
-import com.astune.painter.block.CanvasBlockEntity;
-import com.astune.painter.network.ItemSyncPacket;
 import com.astune.painter.registry.ModAttachments;
 import com.astune.fresco.Fresco;
-import com.mojang.blaze3d.platform.NativeImage;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.resources.model.BakedModel;
+import com.astune.fresco.ClientInputState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
@@ -29,15 +23,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
-import net.neoforged.neoforge.network.PacketDistributor;
-
-import java.util.List;
 
 public class StampItem extends Item implements IPaintProvider, OnRightClickHandler {
 
@@ -71,7 +59,7 @@ public class StampItem extends Item implements IPaintProvider, OnRightClickHandl
 
     @Override
     public boolean shouldPaint(Player player, BlockHitResult result){
-        if (!(player.level().isClientSide && !player.isShiftKeyDown() && Minecraft.getInstance().options.keyUse.isDown())) return false;
+        if (!(player.level().isClientSide && !player.isShiftKeyDown() && ClientInputState.isUseKeyDown())) return false;
         if (lastHitLoc == null) {
             lastHitLoc = result.getLocation();
             spawnStampParticles(player, result);
@@ -124,14 +112,9 @@ public class StampItem extends Item implements IPaintProvider, OnRightClickHandl
         Level level = ctx.getLevel();
         BlockPos pos = ctx.getPos();
         ItemStack stack = ctx.getItemStack();
-        int slot = player.getMainHandItem().getItem().equals(this)
-                ? player.getInventory().selected : 40;
         boolean bgMode = stack.getOrDefault(Fresco.STAMP_BACKGROUND.get(), false);
-        Direction face = ctx.getHitVec().getDirection();
 
-        if (level.isClientSide() && bgMode) {
-            captureBackgroundMode(level, pos, face, stack, slot);
-        } else if (!level.isClientSide() && !bgMode) {
+        if (!level.isClientSide() && !bgMode) {
             captureDefaultMode(level, pos, ctx.getHitVec().getLocation(), stack, player);
         }
     }
@@ -153,79 +136,8 @@ public class StampItem extends Item implements IPaintProvider, OnRightClickHandl
         player.displayClientMessage(Component.translatable("item.fresco.stamp.stored"), true);
     }
 
-    // ── 背景模式：客户端 → 方块纹理 + 画布 → 单矩阵 ──────────────
-
-    @OnlyIn(Dist.CLIENT)
-    private static void captureBackgroundMode(Level level, BlockPos pos, Direction face,
-                                               ItemStack stack, int slot) {
-        BlockEntity be = level.getBlockEntity(pos);
-
-        // 1. 解析实际纹理来源：画布方块用 mimickedState，普通方块用自身 state
-        BlockState textureSource;
-        if (be instanceof CanvasBlockEntity cbe) {
-            textureSource = cbe.getMimickedState();
-        } else {
-            textureSource = level.getBlockState(pos);
-        }
-
-        // 2. 从模型提取纹理 → PixelMatrix
-        PixelMatrix matrix = captureBlockFaceTexture(textureSource, face);
-        if (matrix == null) return;
-
-        // 3. 叠加画布像素（如果该面有 CanvasData）
-        if (be != null) {
-            CanvasData data = be.getExistingData(ModAttachments.CANVAS_DATA.get()).orElse(null);
-            if (data != null) {
-                Vec3 probe = pos.getCenter().add(
-                        face.getStepX() * 0.49, face.getStepY() * 0.49, face.getStepZ() * 0.49);
-                var faces = data.getFaceAtHit(pos, probe);
-                if (!faces.isEmpty()) {
-                    CanvasFace overlay = faces.get(0);
-                    stack.set(Fresco.STAMP_FACE.get(), clonePixelsOnly(overlay, matrix));
-                    PacketDistributor.sendToServer(new ItemSyncPacket(slot, stack));
-                    return;
-                }
-            }
-        }
-
-        // 4. 包装为单 CanvasFace（全块面）
-        stack.set(Fresco.STAMP_FACE.get(), new CanvasFace(face, pos.getCenter(), matrix));
-        PacketDistributor.sendToServer(new ItemSyncPacket(slot, stack));
-    }
-
-
-    /** 从方块模型纹理中提取 PixelMatrix */
-    @OnlyIn(Dist.CLIENT)
-    private static PixelMatrix captureBlockFaceTexture(BlockState state, Direction face) {
-        Minecraft mc = Minecraft.getInstance();
-        BakedModel model = mc.getModelManager().getBlockModelShaper().getBlockModel(state);
-        RandomSource rand = RandomSource.create();
-        List<net.minecraft.client.renderer.block.model.BakedQuad> quads = model.getQuads(state, face, rand);
-        if (quads.isEmpty()) quads = model.getQuads(state, null, rand);
-        if (quads.isEmpty()) return null;
-
-        TextureAtlasSprite sprite = quads.getFirst().getSprite();
-        NativeImage img = sprite.contents().getOriginalImage();
-        if (img == null) return null;
-
-        int w = sprite.contents().width();
-        int h = sprite.contents().height();
-        PixelMatrix matrix = new PixelMatrix(w, h);
-        for (int y = 0; y < h; y++) {
-            for (int x = 0; x < w; x++) {
-                int abgr = img.getPixelRGBA(x, y);
-                int a = (abgr >> 24) & 0xFF;
-                int b = (abgr >> 16) & 0xFF;
-                int g = (abgr >> 8) & 0xFF;
-                int r = abgr & 0xFF;
-                matrix.setPixel(x, y, (a << 24) | (r << 16) | (g << 8) | b);
-            }
-        }
-        return matrix;
-    }
-
     /** CanvasFace 仅拷贝像素（保留原有角坐标和方向），根据来源面方向做镜像使存储像素与 tangents 坐标系对齐 */
-    private static CanvasFace clonePixelsOnly(CanvasFace src, PixelMatrix dp) {
+    public static CanvasFace clonePixelsOnly(CanvasFace src, PixelMatrix dp) {
         PixelMatrix sp = src.pixels();
         int pw = sp.getWidth(), ph = sp.getHeight();
         PixelMatrix rp = new PixelMatrix(pw, ph);

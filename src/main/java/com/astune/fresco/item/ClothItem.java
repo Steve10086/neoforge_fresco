@@ -1,13 +1,11 @@
 package com.astune.fresco.item;
 
-import com.astune.fresco.client.BrushParticleSpawner;
+import com.astune.fresco.particle.BrushParticleSpawner;
 import com.astune.painter.api.*;
-import com.astune.painter.network.ItemSyncPacket;
 import com.astune.painter.registry.ModAttachments;
 import com.astune.painter.registry.ModDataComponents;
 import com.astune.fresco.Fresco;
-import com.astune.fresco.screen.ClothScreen;
-import net.minecraft.client.Minecraft;
+import com.astune.fresco.ClientInputState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -22,12 +20,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 public class ClothItem extends Item implements IPaintProvider {
 
@@ -57,8 +49,7 @@ public class ClothItem extends Item implements IPaintProvider {
 
     @Override
     public boolean shouldPaint(Player player, BlockHitResult result){
-        if (!(player.level().isClientSide
-                && net.minecraft.client.Minecraft.getInstance().options.keyUse.isDown())) return false;
+        if (!(player.level().isClientSide && ClientInputState.isUseKeyDown())) return false;
         if (lastHitLoc == null) {
             lastHitLoc = result.getLocation();
             spawnClothParticle(player, result);
@@ -302,12 +293,6 @@ public class ClothItem extends Item implements IPaintProvider {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        if (level.isClientSide() && player.isShiftKeyDown()) {
-            int slot = hand == InteractionHand.MAIN_HAND
-                    ? player.getInventory().selected
-                    : 40; // offhand slot
-                Minecraft.getInstance().setScreen(new ClothScreen(stack, slot));
-        }
         return InteractionResultHolder.success(stack);
     }
 
@@ -327,25 +312,4 @@ public class ClothItem extends Item implements IPaintProvider {
         tip.add(Component.translatable("item.fresco.cloth.help").withStyle(Style.EMPTY.withColor(0xAAAAAA)));
     }
 
-    @OnlyIn(Dist.CLIENT)
-    @EventBusSubscriber(modid = Fresco.MODID, value = Dist.CLIENT)
-    private static class MouseUpHandler {
-        private static boolean wasPressed = false;
-
-        @SubscribeEvent
-        public static void onClientTick(ClientTickEvent.Pre event) {
-            Minecraft mc = Minecraft.getInstance();
-            if (mc.player == null || mc.level == null) return;
-            Player player = mc.player;
-            if (!player.level().isClientSide || !(player.getMainHandItem().getItem() instanceof ClothItem)) return;
-
-            if (net.minecraft.client.Minecraft.getInstance().options.keyUse.isDown()) {
-                wasPressed = true;
-            } else if(wasPressed){
-                wasPressed = false;
-                int slot = player.getInventory().selected;
-                PacketDistributor.sendToServer(new ItemSyncPacket(slot, player.getMainHandItem()));
-            }
-        }
-    }
 }
